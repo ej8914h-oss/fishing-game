@@ -342,6 +342,54 @@ html,body{
   30%{transform:scale(1.35);filter:drop-shadow(0 0 16px var(--accent-gold)) brightness(1.4);}
   100%{transform:scale(1);}
 }
+/* 먹이 섭취 애니메이션 (시스템 1) */
+.fish-sprite.eating .body-emoji{animation:fishChomp 0.25s ease-in-out;}
+@keyframes fishChomp{0%,100%{transform:scale(1);}50%{transform:scale(1.3) rotate(-6deg);}}
+/* 희귀 변종 발광 (시스템 4) */
+.fish-sprite.variant-golden{filter:drop-shadow(0 0 10px rgba(255,206,84,0.9));}
+.fish-sprite.variant-rainbow{filter:drop-shadow(0 0 10px rgba(255,122,181,0.9));animation:rainbowHue 3s linear infinite;}
+.fish-sprite.variant-cosmic{filter:drop-shadow(0 0 14px rgba(168,123,255,1));animation:cosmicHue 4s linear infinite;}
+@keyframes rainbowHue{0%{filter:drop-shadow(0 0 10px rgba(255,122,181,0.9)) hue-rotate(0deg);}100%{filter:drop-shadow(0 0 10px rgba(255,122,181,0.9)) hue-rotate(360deg);}}
+@keyframes cosmicHue{0%,100%{filter:drop-shadow(0 0 14px rgba(168,123,255,1));}50%{filter:drop-shadow(0 0 22px rgba(255,206,84,0.9));}}
+.fish-sprite .variant-mark{position:absolute;top:-10px;right:-6px;font-size:13px;pointer-events:none;}
+
+/* 먹이 오브젝트 (시스템 1) */
+#foodLayer{position:absolute;inset:0;pointer-events:none;z-index:4;}
+.food-pellet{
+  position:absolute;font-size:15px;transform:translate(-50%,-50%);
+  pointer-events:none;filter:drop-shadow(0 0 3px rgba(255,200,80,0.7));
+  animation:foodSpawn 0.3s ease-out;
+}
+.food-pellet.premium{font-size:17px;filter:drop-shadow(0 0 5px rgba(255,122,181,0.9));}
+@keyframes foodSpawn{0%{transform:translate(-50%,-50%) scale(0.2);opacity:0;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+
+/* 장식품 바닥 표시 (시스템 8) */
+#decorLayer{position:absolute;left:0;right:0;bottom:0;height:42px;z-index:2;pointer-events:none;}
+.decor-item{position:absolute;bottom:2px;font-size:26px;opacity:0.9;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));animation:decorSway 4s ease-in-out infinite;}
+@keyframes decorSway{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+
+/* 개체값(IV) 막대 (시스템 3) */
+.iv-block{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;}
+.iv-row{display:flex;align-items:center;gap:8px;font-size:11px;margin-bottom:5px;}
+.iv-row > span:first-child{width:54px;color:var(--text-mid);flex-shrink:0;}
+.iv-bar-wrap{flex:1;height:7px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;}
+.iv-bar{height:100%;background:linear-gradient(90deg,var(--accent-cyan),var(--accent-gold));border-radius:4px;}
+.iv-val{width:28px;text-align:right;font-weight:700;color:var(--text-high);}
+
+/* 번식 슬롯 (시스템 5) */
+.breed-pair{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0;}
+.breed-slot{flex:1;max-width:140px;text-align:center;padding:12px 8px;border:1.5px solid var(--line);border-radius:12px;background:rgba(255,255,255,0.03);}
+.breed-slot.empty{color:var(--text-mid);font-size:12px;border-style:dashed;}
+.breed-progress{font-size:12px;color:var(--accent-cyan);padding:6px 0;border-bottom:1px solid var(--line);}
+
+/* 진화 계통도 (시스템 7) */
+.evo-tree-wrap{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding:4px;}
+.evo-tree-row{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
+.evo-tree-node{display:flex;flex-direction:column;align-items:center;min-width:60px;padding:6px 4px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,0.03);}
+.evo-tree-node.locked{opacity:0.5;filter:grayscale(1);}
+.etn-emoji{font-size:22px;}
+.etn-name{font-size:10px;margin-top:2px;text-align:center;}
+.evo-tree-arrow{color:var(--accent-gold);font-size:14px;margin:0 1px;}
 
 .sparkle{
   position:absolute;width:4px;height:4px;background:#fff;border-radius:50%;
@@ -725,13 +773,14 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
       <div id="tankWrap">
         <div id="tankCanvasArea">
           <div class="tank-bg-layer" id="tankBgLayer"></div>
+          <div id="foodLayer"></div>
           <div id="fishLayer"></div>
           <div id="fxLayer"></div>
         </div>
         <div id="tankInfoTop">
           <div class="badge">먹이 통: <span id="feedStock">0</span>개</div>
           <div class="badge" id="incomeRateBadge">⚡ 초당 🪙0</div>
-          <div class="badge">탭하여 먹이주기 🍤</div>
+          <div class="badge">화면을 탭해 먹이 뿌리기 🍤</div>
         </div>
         <div id="tankToolbar">
           <button class="btn primary" id="btnFeedAll">🍤 모두에게 먹이주기</button>
@@ -758,6 +807,8 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
     <button class="nav-btn" data-modal="egg"><span class="nav-ic">🥚</span>알<span class="nav-dot" id="eggDot"></span></button>
     <button class="nav-btn" data-modal="genelab"><span class="nav-ic">🧪</span>연구소</button>
     <button class="nav-btn" data-modal="planet"><span class="nav-ic">🪐</span>개척</button>
+    <button class="nav-btn" data-modal="breed"><span class="nav-ic">💞</span>번식</button>
+    <button class="nav-btn" data-modal="decor"><span class="nav-ic">🪸</span>꾸미기</button>
     <button class="nav-btn" data-modal="dex"><span class="nav-ic">📖</span>도감</button>
     <button class="nav-btn" data-modal="quest"><span class="nav-ic">📋</span>퀘스트<span class="nav-dot" id="questDot"></span></button>
     <button class="nav-btn" data-modal="achievement"><span class="nav-ic">🏆</span>업적<span class="nav-dot" id="achDot"></span></button>
@@ -794,6 +845,22 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
   <div class="modal-box">
     <div class="modal-head"><h2>🪐 행성 개척</h2><button class="modal-close" data-close="planet">✕</button></div>
     <div class="modal-body" id="planetContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 번식 -->
+<div class="modal-overlay" id="modal-breed">
+  <div class="modal-box">
+    <div class="modal-head"><h2>💞 번식</h2><button class="modal-close" data-close="breed">✕</button></div>
+    <div class="modal-body" id="breedContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 수족관 꾸미기 -->
+<div class="modal-overlay" id="modal-decor">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🪸 수족관 꾸미기</h2><button class="modal-close" data-close="decor">✕</button></div>
+    <div class="modal-body" id="decorContent"></div>
   </div>
 </div>
 
@@ -1119,6 +1186,20 @@ function planetCost(planet, currentLevel){
   return Math.round(planet.baseCost * Math.pow(planet.costGrowth, currentLevel));
 }
 
+/* ---------- 수족관 꾸미기: 장식품 (시스템 8) ---------- */
+// bonusType: income | happy | growth | rareRate
+const DECORATIONS = [
+  { id:'coral',        name:'산호',         emoji:'🪸', price:300,    bonusType:'happy',    bonusPerUnit:0.03, desc:'개당 행복도 회복 +3%' },
+  { id:'seaweed',      name:'해초',         emoji:'🌿', price:500,    bonusType:'growth',   bonusPerUnit:0.02, desc:'개당 성장 속도 +2%' },
+  { id:'crystal',      name:'수정',         emoji:'💎', price:1200,   bonusType:'income',   bonusPerUnit:0.02, desc:'개당 전체 수익 +2%' },
+  { id:'treasure',     name:'보물상자',     emoji:'🎁', price:2500,   bonusType:'income',   bonusPerUnit:0.035, desc:'개당 전체 수익 +3.5%' },
+  { id:'shipwreck',    name:'난파선',       emoji:'⚓', price:5000,   bonusType:'rareRate', bonusPerUnit:0.04, desc:'개당 희귀종 확률 +4%' },
+  { id:'ruins',        name:'해저 유적',    emoji:'🏛️', price:9000,   bonusType:'growth',   bonusPerUnit:0.04, desc:'개당 성장 속도 +4%' },
+  { id:'space_station',name:'우주 정거장',  emoji:'🛰️', price:18000,  bonusType:'income',   bonusPerUnit:0.05, desc:'개당 전체 수익 +5%' },
+  { id:'blackhole_decor',name:'블랙홀 장식',emoji:'🕳️', price:40000,  bonusType:'rareRate', bonusPerUnit:0.08, desc:'개당 희귀종 확률 +8%' },
+];
+function decorationInfo(id){ return DECORATIONS.find(d=>d.id===id); }
+
 /* ---------- 상점: 물고기 구매 ---------- */
 const SHOP_FISH = [
   { species:'goldfish', price:25 },
@@ -1229,6 +1310,61 @@ const RARE_APPEAR_GRADES = ['epic','legend','myth','cosmic','trans','god'];
 
 const SAVE_KEY = 'cosmicAquariumSave_v2';
 
+/* ---------- 개체값(IV) 시스템 (시스템 3) ---------- */
+// 각 능력치는 0~120 범위 (100이 기준). 같은 종도 개체마다 고유 성능.
+function rollIVs(){
+  const r = ()=> Math.floor(40 + Math.random()*81); // 40~120
+  return {
+    growth: r(),      // 성장률(경험치 배율)
+    income: r(),      // 수익률
+    happy: r(),       // 행복도 증가율
+    explore: r(),     // 탐사 재능
+    evolve: r(),      // 진화 적성
+  };
+}
+// 개체값 평균(종합 등급 표시용)
+function ivAverage(ivs){
+  if(!ivs) return 100;
+  return Math.round((ivs.growth+ivs.income+ivs.happy+ivs.explore+ivs.evolve)/5);
+}
+function ivTier(avg){
+  if(avg>=110) return {label:'S', color:'#ffce54'};
+  if(avg>=95)  return {label:'A', color:'#a87bff'};
+  if(avg>=80)  return {label:'B', color:'#4fd8ff'};
+  if(avg>=60)  return {label:'C', color:'#7de08a'};
+  return {label:'D', color:'#9aa3b2'};
+}
+
+/* ---------- 희귀 변종 시스템 (시스템 4) ---------- */
+const VARIANTS = {
+  golden:  { id:'golden',  name:'황금',   emoji:'✨', chance:0.01,   incomeMult:2.0,  color:'#ffce54', glow:'rgba(255,206,84,0.9)' },
+  rainbow: { id:'rainbow', name:'무지개', emoji:'🌈', chance:0.001,  incomeMult:3.5,  color:'#ff7ab5', glow:'rgba(255,122,181,0.9)' },
+  cosmic:  { id:'cosmic',  name:'우주',   emoji:'🌌', chance:0.0001, incomeMult:6.0,  color:'#a87bff', glow:'rgba(168,123,255,1)' },
+};
+const NORMAL_VARIANT = { id:null, name:'일반', emoji:'', incomeMult:1.0, color:null, glow:null };
+function variantInfo(v){ return v && VARIANTS[v] ? VARIANTS[v] : NORMAL_VARIANT; }
+function rollVariant(){
+  const r = Math.random();
+  if(r < VARIANTS.cosmic.chance)  return 'cosmic';
+  if(r < VARIANTS.rainbow.chance) return 'rainbow';
+  if(r < VARIANTS.golden.chance)  return 'golden';
+  return null;
+}
+
+/* ---------- 먹이 오브젝트 (시스템 1) ---------- */
+// 좌표는 수족관 영역 기준 백분율(0~100). vy는 초당 낙하 속도(%).
+class FoodPellet {
+  constructor(x, y, opts={}){
+    this.uid = 'food_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    this.x = x;
+    this.y = y;
+    this.vy = opts.vy || (3 + Math.random()*2);  // 낙하 속도(%/초)
+    this.premium = opts.premium || false;          // 프리미엄 먹이 여부
+    this.bornAt = Date.now();
+    this.eaten = false;
+  }
+}
+
 /* ---------- Fish 클래스 ---------- */
 class Fish {
   constructor(speciesId, opts={}){
@@ -1248,10 +1384,30 @@ class Fish {
     this.swimPhase = Math.random()*1000;
     this.targetX = this.x;
     this.targetY = this.y;
+
+    // 개체값(IV) — 같은 종이라도 고유 성능 (시스템 3)
+    this.ivs = opts.ivs || rollIVs();
+    // AI 행동 능력치 (시스템 2)
+    this.hunger = opts.hunger !== undefined ? opts.hunger : Math.random()*30+20;
+    this.curiosity = opts.curiosity !== undefined ? opts.curiosity : Math.floor(Math.random()*70+30);
+    this.aggression = opts.aggression !== undefined ? opts.aggression : Math.floor(Math.random()*60+10);
+    this.intelligence = opts.intelligence !== undefined ? opts.intelligence : Math.floor(Math.random()*70+30);
+    // 희귀 개체 변종 (시스템 4): null | 'golden' | 'rainbow' | 'cosmic'
+    this.variant = opts.variant !== undefined ? opts.variant : rollVariant();
+    // 번식용 성별 (시스템 5)
+    this.gender = opts.gender || (Math.random()<0.5 ? 'M' : 'F');
+    // 진화 게이지 (먹이로 충전, 시스템 1)
+    this.evoGauge = opts.evoGauge || 0;
+    // AI 상태 머신: 'idle' | 'seekFood' | 'explore' | 'chase'
+    this.aiState = 'idle';
+    this.foodTarget = null;       // 추적 중인 먹이 uid
+    this.aiTimer = 0;             // 행동 전환 타이머
+    this.eatFlash = 0;            // 먹이 섭취 애니메이션 카운터
   }
 
   get def(){ return SPECIES[this.species]; }
   get grade(){ return gradeInfo(this.def.grade); }
+  get variantInfo(){ return variantInfo(this.variant); }
   get stageInfo(){ return GROWTH_STAGES.find(s=>s.id===this.stage); }
   get pers(){ return personalityInfo(this.personality); }
 
@@ -1262,16 +1418,18 @@ class Fish {
   sellPrice(){
     const stageMult = this.stageInfo.xpMult;
     const lvlMult = 1 + this.level*0.12;
-    return Math.round(this.def.baseSell * stageMult * lvlMult * this.pers.sellMult);
+    const ivMult = this.ivs ? this.ivs.income/100 : 1;
+    return Math.round(this.def.baseSell * stageMult * lvlMult * this.pers.sellMult * ivMult * this.variantInfo.incomeMult);
   }
 
-  /* 초당 자동 수익 (밸런스 재설계: 등급+레벨+성격이 모두 반영되어
+  /* 초당 자동 수익 (밸런스 재설계: 등급+레벨+성격+개체값+변종이 모두 반영되어
      1분 안에 체감 가능한 성장 곡선을 만든다) */
   incomePerSecond(){
     const stageMult = this.stageInfo.xpMult;
     const lvlMult = 1 + this.level*0.05;
     const base = 0.12 * this.grade.mult * stageMult * lvlMult;
-    return base * this.pers.incomeMult;
+    const ivMult = this.ivs ? this.ivs.income/100 : 1;
+    return base * this.pers.incomeMult * ivMult * this.variantInfo.incomeMult;
   }
   incomePerMinute(){
     return Math.round(this.incomePerSecond()*60);
@@ -1279,6 +1437,7 @@ class Fish {
 
   addXp(amount){
     amount = amount * this.pers.xpMult;
+    if(this.ivs) amount *= this.ivs.growth/100;
     this.xp += amount;
     let leveled = false;
     while(this.xp >= this.xpToNextLevel()){
@@ -1341,9 +1500,13 @@ class GameState {
     this.achievementsDone = {};
     this.eggs = [];
     this.planets = {};
+    this.decorations = {};   // 수족관 꾸미기 (시스템 8): {decoId: count}
+    this.breeding = [];      // 진행 중 번식 (시스템 5): {uid, parentA, parentB, hatchAt, species}
+    this.food = [];          // 화면 내 먹이 오브젝트 (시스템 1, 저장 안 함)
     this.stats = {
       totalFeed:0, totalGrow:0, totalExplore:0, totalSell:0, totalEvolves:0,
       totalHatched:0, totalDismantle:0, totalMutation:0, totalNewborn:0, totalGeneCombine:0,
+      totalPelletEaten:0, totalBred:0, totalRareVariant:0,
       lastTick: Date.now(),
     };
     this.exploring = null;
@@ -1361,7 +1524,9 @@ function serializeState(state){
     capacity:state.capacity,
     fish: state.fish.map(f=>({
       uid:f.uid, species:f.species, level:f.level, xp:f.xp, stage:f.stage,
-      happiness:f.happiness, age:f.age, bornAt:f.bornAt, personality:f.personality
+      happiness:f.happiness, age:f.age, bornAt:f.bornAt, personality:f.personality,
+      ivs:f.ivs, hunger:f.hunger, curiosity:f.curiosity, aggression:f.aggression,
+      intelligence:f.intelligence, variant:f.variant, gender:f.gender, evoGauge:f.evoGauge
     })),
     dex:state.dex,
     unlockedRegions:state.unlockedRegions,
@@ -1372,6 +1537,8 @@ function serializeState(state){
     achievementsDone:state.achievementsDone,
     eggs: state.eggs.map(e=>({ uid:e.uid, eggType:e.eggType, regionId:e.regionId, startedAt:e.startedAt, hatchAt:e.hatchAt })),
     planets: state.planets,
+    decorations: state.decorations,
+    breeding: state.breeding,
     stats:state.stats,
     exploring:state.exploring,
     createdAt:state.createdAt,
@@ -1406,9 +1573,12 @@ function deserializeState(json){
   state.achievementsDone = d.achievementsDone || {};
   state.eggs = (d.eggs||[]).map(e=>new EggInstance(e.eggType, e));
   state.planets = d.planets || {};
+  state.decorations = d.decorations || {};
+  state.breeding = d.breeding || [];
   state.stats = Object.assign({
     totalFeed:0, totalGrow:0, totalExplore:0, totalSell:0, totalEvolves:0,
     totalHatched:0, totalDismantle:0, totalMutation:0, totalNewborn:0, totalGeneCombine:0,
+    totalPelletEaten:0, totalBred:0, totalRareVariant:0,
     lastTick:Date.now()
   }, d.stats||{});
   state.exploring = d.exploring || null;
@@ -1474,10 +1644,23 @@ function computeTotalIncomePerSecond(state){
   if(hasDragon) total *= 1.8;
   if(state.automations.auto_collector) total *= 1.3;
   total *= (1 + getPlanetBonus(state, 'income'));
+  total *= (1 + getDecorationBonus(state, 'income'));
   return total;
 }
 function computeTotalIncomePerMinute(state){
   return Math.round(computeTotalIncomePerSecond(state)*60);
+}
+
+/* ---------- 장식품 보너스 합산 (시스템 8) ---------- */
+function getDecorationBonus(state, bonusType){
+  let total = 0;
+  if(typeof DECORATIONS === 'undefined') return 0;
+  for(const d of DECORATIONS){
+    if(d.bonusType !== bonusType) continue;
+    const cnt = (state.decorations && state.decorations[d.id]) || 0;
+    total += cnt * d.bonusPerUnit;
+  }
+  return total;
 }
 
 </script>
@@ -1512,6 +1695,7 @@ function initGame(){
   startGameLoop();
   spawnAmbientBubbles();
   spawnLightRays();
+  renderDecorBackdrop();
 }
 
 function applyOfflineProgress(){
@@ -1590,6 +1774,8 @@ function gameTick(deltaSec){
   }
   // 알 부화 체크 (핵심 시스템 5)
   checkEggHatching();
+  // 번식 부화 체크 (시스템 5)
+  checkBreeding();
   updateHeaderStats();
   checkAchievements();
   checkMainQuestProgress();
@@ -1704,35 +1890,267 @@ function hatchEggInstant(uid){
   renderEggModal();
 }
 
-/* ---------- 렌더 루프 (애니메이션) ---------- */
+/* ---------- 번식 시스템 (시스템 5) ---------- */
+const BREED_TIME = 90;        // 부화까지 90초
+const BREED_COST_COIN = 200;
+function canBreed(f){
+  // 성체 이상 + 행복도 60 이상이면 번식 가능
+  const order = ['fry','juv','adult','giant'];
+  return order.indexOf(f.stage) >= 2 && f.happiness >= 60;
+}
+function startBreeding(uidA, uidB){
+  const a = STATE.fish.find(f=>f.uid===uidA);
+  const b = STATE.fish.find(f=>f.uid===uidB);
+  if(!a || !b){ queueToast('부모 물고기를 찾을 수 없습니다.', 'warn'); return; }
+  if(a.uid===b.uid){ queueToast('서로 다른 물고기를 선택하세요.', 'warn'); return; }
+  if(a.gender===b.gender){ queueToast('암컷과 수컷 한 쌍이 필요합니다.', 'warn'); return; }
+  if(!canBreed(a) || !canBreed(b)){ queueToast('성체이면서 행복도 60 이상인 물고기만 번식할 수 있습니다.', 'warn'); return; }
+  if(STATE.coin < BREED_COST_COIN){ queueToast('코인이 부족합니다.', 'warn'); return; }
+  if(STATE.fish.length + STATE.breeding.length >= STATE.capacity){ queueToast('수족관 공간이 부족합니다.', 'warn'); return; }
+  STATE.coin -= BREED_COST_COIN;
+  // 부모 중 한쪽 종을 계승 (낮은 확률로 상위 진화종/돌연변이)
+  let childSpecies = Math.random()<0.5 ? a.species : b.species;
+  let mutated = false;
+  if(Math.random() < 0.12){
+    // 돌연변이: 부모 종의 진화형이 있으면 그것으로
+    const evo = SPECIES[childSpecies].evolvesTo;
+    if(evo){ childSpecies = evo; mutated = true; }
+  }
+  STATE.breeding.push({
+    uid: 'br_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    parentA: a.uid, parentB: b.uid,
+    pa: a.species, pb: b.species,
+    ivA: a.ivs, ivB: b.ivs,
+    species: childSpecies,
+    mutated,
+    hatchAt: Date.now() + BREED_TIME*1000,
+  });
+  queueToast(`💞 ${a.def.name} + ${b.def.name} 번식 시작! ${BREED_TIME}초 후 부화`, 'discover');
+  renderBreedModal();
+  renderAll();
+}
+function checkBreeding(){
+  if(!STATE.breeding || STATE.breeding.length===0) return;
+  const now = Date.now();
+  const ready = STATE.breeding.filter(b=>now >= b.hatchAt);
+  if(ready.length===0) return;
+  for(const b of ready){
+    STATE.breeding = STATE.breeding.filter(x=>x.uid!==b.uid);
+    if(STATE.fish.length >= STATE.capacity){
+      queueToast('수족관이 가득 차서 새끼가 부화하지 못했습니다.', 'warn');
+      continue;
+    }
+    // 부모 능력치(IV) 일부 계승 + 약간의 변동
+    const childIv = {};
+    const keys = ['growth','income','happy','explore','evolve'];
+    const ivA = b.ivA || rollIVs(), ivB = b.ivB || rollIVs();
+    for(const k of keys){
+      const base = (ivA[k]+ivB[k])/2;
+      childIv[k] = Math.max(40, Math.min(120, Math.round(base + (Math.random()*20-10))));
+    }
+    // 희귀 변종 출현 확률 증가 (부모 번식 보너스)
+    let variant = rollVariant();
+    if(!variant && Math.random() < 0.03) variant = 'golden';
+    const f = addFish(b.species, { ivs: childIv, variant });
+    if(f){
+      STATE.stats.totalBred = (STATE.stats.totalBred||0)+1;
+      bumpQuestProgress('breedCount', 1);
+      const msg = b.mutated ? `🧬 돌연변이 발생! ${f.def.name} 탄생!` : `🐣 새끼 ${f.def.name}가 태어났습니다!`;
+      queueToast(msg, 'discover');
+    }
+  }
+  renderAll();
+}
+
+/* ---------- 렌더 루프 (애니메이션 + 먹이 물리 + AI) ---------- */
 function renderLoop(t){
   const dt = Math.min(50, t - lastFrame);
   lastFrame = t;
+  updateFoodPellets(dt);
   animateFishPositions(dt);
   requestAnimationFrame(renderLoop);
+}
+
+/* 먹이 낙하 및 만료 처리 (시스템 1) */
+function updateFoodPellets(dt){
+  if(!STATE.food || STATE.food.length===0) return;
+  const layer = document.getElementById('foodLayer');
+  const dtSec = dt/1000;
+  for(const food of STATE.food){
+    if(food.eaten) continue;
+    food.y += food.vy * dtSec;
+    // 바닥 도달 시 잠시 머물다 사라짐
+    if(food.y > 92){ food.y = 92; }
+    const el = document.getElementById('foodel_'+food.uid);
+    if(el){
+      el.style.left = food.x + '%';
+      el.style.top = food.y + '%';
+    }
+  }
+  // 5초 이상 안 먹힌 먹이는 제거 (행복도 약간 감소 패널티는 없음)
+  const now = Date.now();
+  const before = STATE.food.length;
+  STATE.food = STATE.food.filter(food=>{
+    if(food.eaten || now - food.bornAt > 9000){
+      const el = document.getElementById('foodel_'+food.uid);
+      if(el) el.remove();
+      return false;
+    }
+    return true;
+  });
+  if(STATE.food.length !== before) renderTankIncomeBadge();
+}
+
+/* 가장 가까운 먹이 탐색 */
+function findNearestFood(f){
+  let best=null, bestD=Infinity;
+  for(const food of STATE.food){
+    if(food.eaten) continue;
+    const dx=food.x-f.x, dy=food.y-f.y;
+    const d=dx*dx+dy*dy;
+    if(d<bestD){ bestD=d; best=food; }
+  }
+  return best ? {food:best, dist:Math.sqrt(bestD)} : null;
+}
+
+/* 물고기가 먹이를 섭취 (시스템 1 섭취 효과) */
+function fishEatFood(f, food){
+  food.eaten = true;
+  f.eatFlash = 12;
+  f.hunger = Math.max(0, f.hunger - 35);
+  f.foodTarget = null;
+  f.aiState = 'idle';
+  STATE.stats.totalPelletEaten = (STATE.stats.totalPelletEaten||0) + 1;
+  // 섭취 효과: 경험치 / 행복도 / 진화 게이지
+  const premium = food.premium;
+  const xpGain = premium ? 16 : 9;
+  const happyIv = f.ivs ? f.ivs.happy/100 : 1;
+  const leveled = f.addXp(xpGain);
+  f.happiness = Math.min(100, f.happiness + (premium?16:9)*happyIv);
+  f.evoGauge = Math.min(100, (f.evoGauge||0) + (premium?12:7));
+  STATE.stats.totalFeed++;
+  bumpQuestProgress('feedCount', 1);
+  spawnFloatingText(f, `+${Math.round(xpGain*f.pers.xpMult)} XP`, 'var(--accent-cyan)');
+  spawnFeedParticles(f);
+  const el = document.getElementById('foodel_'+food.uid);
+  if(el) el.remove();
+  if(leveled){
+    STATE.stats.totalGrow++;
+    bumpQuestProgress('growCount', 1);
+    triggerLevelUpEffect(f);
+  }
+  if(f.canEvolve() && f.evoGauge >= 100){
+    f.evoGauge = 0;
+    triggerEvolution(f);
+  }
 }
 
 function animateFishPositions(dt){
   const layer = document.getElementById('fishLayer');
   if(!layer) return;
+  const dtSec = dt/1000;
   for(const f of STATE.fish){
+    // 배고픔 서서히 증가 (시스템 2)
+    f.hunger = Math.min(100, (f.hunger||0) + 1.5*dtSec);
+    if(f.eatFlash > 0) f.eatFlash--;
+    f.aiTimer = (f.aiTimer||0) - dt;
+
+    // ----- AI 의사결정 (시스템 2) -----
+    const nearFood = findNearestFood(f);
+    const intel = (f.intelligence||50)/100;
+    // 먹이 탐지 반경: 지능이 높을수록 넓게 탐지
+    const detectRadius = 25 + intel*40;
+    if(nearFood && (f.hunger > 30 || nearFood.dist < detectRadius*0.5) && nearFood.dist < detectRadius){
+      f.aiState = 'seekFood';
+      f.foodTarget = nearFood.food.uid;
+      f.targetX = nearFood.food.x;
+      f.targetY = nearFood.food.y;
+    } else if(f.aiState === 'seekFood'){
+      // 목표 먹이가 사라졌으면 idle 복귀
+      const stillThere = STATE.food.find(fd=>fd.uid===f.foodTarget && !fd.eaten);
+      if(!stillThere){ f.aiState='idle'; f.foodTarget=null; }
+    }
+
+    // 배회/탐험/추적 행동 (먹이 추적 중이 아닐 때)
+    if(f.aiState !== 'seekFood' && f.aiTimer <= 0){
+      const curio = (f.curiosity||50)/100;
+      const aggr = (f.aggression||30)/100;
+      const roll = Math.random();
+      if(aggr > 0.6 && roll < aggr*0.4 && STATE.fish.length > 1){
+        // 공격성 높음: 다른 물고기 추적
+        const others = STATE.fish.filter(o=>o.uid!==f.uid);
+        const tgt = others[Math.floor(Math.random()*others.length)];
+        f.aiState='chase'; f.targetX=tgt.x; f.targetY=tgt.y;
+        f.aiTimer = 1500 + Math.random()*1500;
+      } else if(curio > 0.5 && roll < curio*0.5){
+        // 호기심 높음: 수족관 구석구석 탐험
+        f.aiState='explore';
+        f.targetX = Math.random()*88+4;
+        f.targetY = Math.random()*70+8;
+        f.aiTimer = 2000 + Math.random()*2000;
+      } else {
+        f.aiState='idle';
+        f.targetX = Math.random()*80+5;
+        f.targetY = Math.random()*65+10;
+        f.aiTimer = 2500 + Math.random()*2500;
+      }
+    }
+
+    // ----- 이동 -----
     const dx = f.targetX - f.x, dy = f.targetY - f.y;
     const dist = Math.sqrt(dx*dx+dy*dy);
+    // 먹이 추적 시 더 빠르게 (지능 보정)
+    let speed = f.swimSpeed * (f.aiState==='seekFood' ? (1.8 + intel*1.2) : 1);
     if(dist < 1.2){
-      f.targetX = Math.random()*80+5;
-      f.targetY = Math.random()*65+10;
+      if(f.aiState==='seekFood' && f.foodTarget){
+        const food = STATE.food.find(fd=>fd.uid===f.foodTarget && !fd.eaten);
+        if(food){ fishEatFood(f, food); }
+      }
+      if(f.aiState!=='seekFood'){ f.aiTimer = Math.min(f.aiTimer, 200); }
     } else {
-      f.x += (dx/dist) * f.swimSpeed * (dt/16);
-      f.y += (dy/dist) * f.swimSpeed * (dt/16) * 0.6;
+      f.x += (dx/dist) * speed * (dt/16);
+      f.y += (dy/dist) * speed * (dt/16) * 0.7;
       f.dir = dx >= 0 ? 1 : -1;
     }
+    f.x = Math.max(2, Math.min(96, f.x));
+    f.y = Math.max(4, Math.min(94, f.y));
+
     const el = document.getElementById('sprite_'+f.uid);
     if(el){
       el.style.left = f.x + '%';
       el.style.top = f.y + '%';
       el.classList.toggle('flip', f.dir < 0);
+      el.classList.toggle('eating', f.eatFlash > 0);
     }
   }
+}
+
+/* 화면 클릭 시 먹이 생성 (시스템 1 핵심) */
+function dropFoodAt(xPct, yPct, premium){
+  const stockKey = premium ? 'premiumFeedStock' : 'feedStock';
+  if(STATE[stockKey] <= 0){
+    if(premium){ queueToast('프리미엄 먹이가 없습니다.', 'warn'); return false; }
+    queueToast('먹이가 부족합니다. 상점에서 구매하세요.', 'warn');
+    return false;
+  }
+  STATE[stockKey]--;
+  const food = new FoodPellet(xPct, yPct, { premium });
+  STATE.food.push(food);
+  renderFoodPellet(food);
+  updateHeaderStats();
+  return true;
+}
+
+function renderFoodPellet(food){
+  const layer = document.getElementById('foodLayer');
+  if(!layer) return;
+  const el = document.createElement('div');
+  el.className = 'food-pellet' + (food.premium?' premium':'');
+  el.id = 'foodel_'+food.uid;
+  el.textContent = food.premium ? '🍣' : '🍤';
+  el.style.left = food.x + '%';
+  el.style.top = food.y + '%';
+  layer.appendChild(el);
 }
 
 /* ---------- 물고기 추가/제거 ---------- */
@@ -1747,6 +2165,11 @@ function addFish(speciesId, opts={}){
   STATE.dex[speciesId] = true;
   if(wasNew){
     queueToast(`신규 발견: ${SPECIES[speciesId].name}! 도감에 등록되었습니다.`, 'discover');
+  }
+  // 희귀 변종 등장 연출 (시스템 4)
+  if(f.variant){
+    STATE.stats.totalRareVariant = (STATE.stats.totalRareVariant||0)+1;
+    triggerRareAppearEffect(f);
   }
   renderAll();
   return f;
@@ -1803,24 +2226,16 @@ function feedAllFish(silent=false){
     if(!silent) queueToast('먹이가 부족합니다. 상점에서 구매하세요.', 'warn');
     return;
   }
-  let fed = 0;
-  for(const f of STATE.fish){
-    const usePremium = STATE.premiumFeedStock > 0;
-    if(usePremium){ STATE.premiumFeedStock--; }
-    else if(STATE.feedStock > 0){ STATE.feedStock--; }
-    else break;
-    const xpGain = usePremium ? 14 : 7;
-    const leveled = f.addXp(xpGain);
-    f.happiness = Math.min(100, f.happiness + (usePremium?14:8));
-    fed++;
-    if(leveled){ STATE.stats.totalGrow++; bumpQuestProgress('growCount',1); triggerLevelUpEffect(f); }
-    if(f.canEvolve()) triggerEvolution(f);
+  // 수족관 전체에 먹이를 흩뿌린다 (물고기들이 직접 헤엄쳐 와서 먹음)
+  const count = Math.min(8, STATE.feedStock + STATE.premiumFeedStock, Math.max(3, STATE.fish.length));
+  let dropped = 0;
+  for(let i=0;i<count;i++){
+    const premium = STATE.premiumFeedStock > 0;
+    const x = 10 + Math.random()*80;
+    const y = 8 + Math.random()*30;
+    if(dropFoodAt(x, y, premium)) dropped++;
   }
-  if(fed>0){
-    STATE.stats.totalFeed += fed;
-    bumpQuestProgress('feedCount', fed);
-    if(!silent) queueToast(`${fed}마리에게 먹이를 주었습니다.`, '');
-  }
+  if(dropped>0 && !silent) queueToast(`먹이 ${dropped}개를 뿌렸습니다. 물고기들이 모여듭니다!`, '');
   renderAll();
 }
 
@@ -1866,10 +2281,21 @@ function triggerLevelUpEffect(f){
 function triggerRareAppearEffect(f){
   const ov = document.getElementById('rareAppearOverlay');
   if(!ov) return;
-  document.getElementById('rareAppearEmoji').textContent = f.def.emoji;
-  document.getElementById('rareAppearName').textContent = f.def.name;
-  document.getElementById('rareAppearGrade').textContent = f.grade.name + ' 등급';
-  document.getElementById('rareAppearGrade').style.color = f.grade.color;
+  const vi = f.variantInfo;
+  const titleEl = ov.querySelector('.rare-title');
+  if(f.variant){
+    document.getElementById('rareAppearEmoji').textContent = vi.emoji + f.def.emoji;
+    document.getElementById('rareAppearName').textContent = vi.name + ' ' + f.def.name;
+    document.getElementById('rareAppearGrade').textContent = `희귀 변종 · 수익 x${vi.incomeMult}`;
+    document.getElementById('rareAppearGrade').style.color = vi.color;
+    if(titleEl) titleEl.textContent = '✦ 희귀 변종 출현 ✦';
+  } else {
+    document.getElementById('rareAppearEmoji').textContent = f.def.emoji;
+    document.getElementById('rareAppearName').textContent = f.def.name;
+    document.getElementById('rareAppearGrade').textContent = f.grade.name + ' 등급';
+    document.getElementById('rareAppearGrade').style.color = f.grade.color;
+    if(titleEl) titleEl.textContent = '✦ 희귀 발견 ✦';
+  }
   ov.classList.add('show');
   setTimeout(()=>ov.classList.remove('show'), 2600);
 }
@@ -2394,10 +2820,14 @@ function renderTank(){
     const scale = f.stageInfo.scale;
     const isGlow = ['epic','legend','myth','cosmic','trans','god'].includes(f.def.grade);
     el.classList.toggle('glow-strong', isGlow);
-    el.style.color = f.grade.color;
+    el.classList.toggle('variant-golden', f.variant==='golden');
+    el.classList.toggle('variant-rainbow', f.variant==='rainbow');
+    el.classList.toggle('variant-cosmic', f.variant==='cosmic');
+    el.style.color = f.variant ? f.variantInfo.color : f.grade.color;
     el.style.left = f.x + '%';
     el.style.top = f.y + '%';
-    el.innerHTML = `<div class="grade-glow"></div><span class="body-emoji" style="font-size:${28*scale}px;">${f.def.emoji}</span>`;
+    const vEmoji = f.variant ? `<span class="variant-mark">${f.variantInfo.emoji}</span>` : '';
+    el.innerHTML = `<div class="grade-glow"></div>${vEmoji}<span class="body-emoji" style="font-size:${28*scale}px;">${f.def.emoji}</span>`;
   });
 
   let exploreBadge = document.querySelector('#tankInfoTop .explore-badge');
@@ -2451,23 +2881,41 @@ function openFishDetail(uid){
   selectedFishUid = uid;
   const f = STATE.fish.find(x=>x.uid===uid);
   if(!f) return;
-  document.getElementById('fdName').textContent = `${f.def.emoji} ${f.def.name}`;
-  const xpPct = Math.min(100, Math.round((f.xp/f.xpToNextLevel())*100));
+  const vi = f.variantInfo;
+  const variantPrefix = f.variant ? `${vi.emoji}${vi.name} ` : '';
+  document.getElementById('fdName').textContent = `${variantPrefix}${f.def.emoji} ${f.def.name}`;
+  const ivAvg = ivAverage(f.ivs);
+  const tier = ivTier(ivAvg);
   const body = document.getElementById('fishDetailBody');
+  const ivRow = (label, val)=>`<div class="iv-row"><span>${label}</span><div class="iv-bar-wrap"><div class="iv-bar" style="width:${Math.min(100,val/120*100)}%;"></div></div><span class="iv-val">${val}</span></div>`;
+  const evoPct = Math.round(f.evoGauge||0);
+  const breedOk = canBreed(f);
   body.innerHTML = `
     <span class="detail-grade-tag" style="background:${f.grade.color}22;color:${f.grade.color};border:1px solid ${f.grade.color}55;">${f.grade.name}</span>
     <span class="detail-pers-tag">${f.pers.emoji} ${f.pers.name}</span>
+    <span class="detail-pers-tag">${f.gender==='M'?'♂ 수컷':'♀ 암컷'}</span>
+    ${f.variant ? `<span class="detail-pers-tag" style="color:${vi.color};border-color:${vi.color}55;">${vi.emoji} ${vi.name} 변종 · 수익x${vi.incomeMult}</span>` : ''}
+    <div class="detail-stat"><span>종합 개체값</span><span class="v" style="color:${tier.color};font-weight:800;">${tier.label} 등급 (평균 ${ivAvg})</span></div>
+    <div class="iv-block">
+      ${ivRow('성장률', f.ivs.growth)}
+      ${ivRow('수익률', f.ivs.income)}
+      ${ivRow('행복증가', f.ivs.happy)}
+      ${ivRow('탐사재능', f.ivs.explore)}
+      ${ivRow('진화적성', f.ivs.evolve)}
+    </div>
     <div class="detail-stat"><span>성장 단계</span><span class="v">${f.stageInfo.name}</span></div>
     <div class="detail-stat"><span>레벨</span><span class="v">Lv.${f.level} (${Math.floor(f.xp)}/${f.xpToNextLevel()} XP)</span></div>
+    <div class="detail-stat"><span>배고픔</span><span class="v">${Math.round(f.hunger||0)} / 100</span></div>
     <div class="detail-stat"><span>행복도</span><span class="v">${Math.round(f.happiness)} / 100</span></div>
+    <div class="detail-stat"><span>진화 게이지</span><span class="v">${evoPct}% ${f.canEvolve()?'(진화 준비)':''}</span></div>
     <div class="detail-stat"><span>판매가</span><span class="v">🪙${f.sellPrice()}</span></div>
     <div class="detail-stat"><span>초당 수익</span><span class="v">🪙${f.incomePerSecond().toFixed(2)}</span></div>
     <div class="detail-stat"><span>성격 효과</span><span class="v" style="font-size:11px;text-align:right;">${f.pers.desc}</span></div>
     <div class="detail-stat"><span>다음 진화</span><span class="v">${f.def.evolvesTo ? SPECIES[f.def.evolvesTo].name : '최종 진화'}</span></div>
+    <div class="detail-stat"><span>번식 가능</span><span class="v">${breedOk ? '✅ 가능' : '❌ (성체·행복도60 필요)'}</span></div>
     ${f.def.skill ? `<div class="detail-skill">✦ 패시브: ${f.def.skill}</div>` : ''}
     <div class="detail-actions">
-      <button class="btn primary full" onclick="feedFish('${f.uid}')">🍤 먹이주기 (일반)</button>
-      <button class="btn full" onclick="feedFish('${f.uid}', true)">🍤 먹이주기 (고급)</button>
+      <button class="btn primary full" onclick="closeModal('fishdetail');openModal('breed');selectForBreed('${f.uid}')">💞 번식 짝으로 선택</button>
       <button class="btn full" onclick="selectForGeneLab('${f.uid}')">🧪 유전자 연구소로 보내기</button>
       <button class="btn danger full" onclick="sellFish('${f.uid}')">💰 판매하기</button>
     </div>
@@ -2499,6 +2947,8 @@ function openModal(name){
   if(name==='achievement') renderAchievementModal();
   if(name==='egg') renderEggModal();
   if(name==='planet') renderPlanetModal();
+  if(name==='breed') renderBreedModal();
+  if(name==='decor') renderDecorModal();
 }
 function closeModal(name){
   document.getElementById('modal-'+name).classList.remove('open');
@@ -2794,11 +3244,147 @@ function upgradePlanet(planetId){
   renderPlanetModal();
 }
 
-/* ---------- 도감 모달 ---------- */
+/* ---------- 번식 모달 (시스템 5) ---------- */
+let breedSlotA = null, breedSlotB = null;
+function selectForBreed(uid){
+  const f = STATE.fish.find(x=>x.uid===uid);
+  if(!f) return;
+  if(!breedSlotA) breedSlotA = uid;
+  else if(!breedSlotB && uid!==breedSlotA) breedSlotB = uid;
+  openModal('breed');
+  renderBreedModal();
+}
+function clearBreedSlots(){ breedSlotA=null; breedSlotB=null; renderBreedModal(); }
+function renderBreedModal(){
+  const content = document.getElementById('breedContent');
+  if(!content) return;
+  const a = STATE.fish.find(f=>f.uid===breedSlotA);
+  const b = STATE.fish.find(f=>f.uid===breedSlotB);
+  const slot = (f, label)=>{
+    if(!f) return `<div class="breed-slot empty">${label}<br><span style="font-size:11px;color:var(--text-low);">아래 목록에서 선택</span></div>`;
+    return `<div class="breed-slot" style="border-color:${f.grade.color}66;">
+      <div style="font-size:30px;">${f.variant?f.variantInfo.emoji:''}${f.def.emoji}</div>
+      <div style="font-weight:700;">${f.def.name}</div>
+      <div style="font-size:11px;color:var(--text-mid);">${f.gender==='M'?'♂':'♀'} · ${f.stageInfo.name} · 행복 ${Math.round(f.happiness)}</div>
+    </div>`;
+  };
+  // 번식 진행 현황
+  let progressHtml = '';
+  if(STATE.breeding.length){
+    progressHtml = '<div class="section-label" style="margin-top:14px;">부화 진행 중</div>' + STATE.breeding.map(br=>{
+      const remain = Math.max(0, Math.ceil((br.hatchAt-Date.now())/1000));
+      return `<div class="breed-progress">🥚 ${SPECIES[br.species]?.name||'새끼'} ${br.mutated?'🧬':''} — ${remain}초 후 부화</div>`;
+    }).join('');
+  }
+  const canStart = a && b;
+  content.innerHTML = `
+    <p style="font-size:12px;color:var(--text-mid);margin-bottom:12px;">암컷·수컷 한 쌍(성체, 행복도 60 이상)을 선택하면 알을 낳습니다. 부모의 개체값을 일부 계승하며, 낮은 확률로 돌연변이·희귀 변종이 출현합니다. (비용 🪙${BREED_COST_COIN})</p>
+    <div class="breed-pair">${slot(a,'부모 A')}<span style="font-size:24px;">💞</span>${slot(b,'부모 B')}</div>
+    <div style="display:flex;gap:8px;margin:12px 0;">
+      <button class="btn primary full" ${canStart?'':'disabled'} onclick="startBreeding('${breedSlotA}','${breedSlotB}');clearBreedSlots();">번식 시작</button>
+      <button class="btn" onclick="clearBreedSlots()">선택 초기화</button>
+    </div>
+    <div class="section-label">물고기 선택</div>
+    <div class="grid-cards">${STATE.fish.map(f=>`
+      <div class="shop-item" style="cursor:pointer;${(f.uid===breedSlotA||f.uid===breedSlotB)?'border-color:var(--accent-gold);':''}" onclick="selectForBreed('${f.uid}')">
+        <div style="font-size:24px;text-align:center;">${f.variant?f.variantInfo.emoji:''}${f.def.emoji}</div>
+        <div class="si-name" style="text-align:center;font-size:12px;">${f.def.name}</div>
+        <div class="si-desc" style="text-align:center;">${f.gender==='M'?'♂ 수컷':'♀ 암컷'} · ${canBreed(f)?'✅':'❌'}</div>
+      </div>`).join('')}</div>
+    ${progressHtml}
+  `;
+}
+
+/* ---------- 수족관 꾸미기 모달 (시스템 8) ---------- */
+function renderDecorModal(){
+  const content = document.getElementById('decorContent');
+  if(!content) return;
+  const bonusLabel = { income:'전체 수익', happy:'행복도 회복', growth:'성장 속도', rareRate:'희귀종 확률' };
+  content.innerHTML = `<p style="font-size:12px;color:var(--text-mid);margin-bottom:12px;">장식품을 설치하면 수족관이 화려해지고 영구 보너스를 얻습니다. 같은 장식을 여러 개 설치하면 효과가 누적됩니다.</p>
+  <div class="grid-cards">` + DECORATIONS.map(d=>{
+    const cnt = (STATE.decorations && STATE.decorations[d.id]) || 0;
+    return `<div class="shop-item">
+      <div style="font-size:30px;text-align:center;">${d.emoji}</div>
+      <div class="si-name" style="text-align:center;">${d.name} ${cnt?`<span style="color:var(--accent-cyan);">x${cnt}</span>`:''}</div>
+      <div class="si-desc">${d.desc}</div>
+      <div class="si-desc">분류: ${bonusLabel[d.bonusType]}</div>
+      <div class="si-price">🪙 ${d.price.toLocaleString()}</div>
+      <button class="btn primary small full" onclick="buyDecoration('${d.id}')">설치</button>
+    </div>`;
+  }).join('') + '</div>';
+}
+function buyDecoration(id){
+  const d = decorationInfo(id);
+  if(!d) return;
+  if(STATE.coin < d.price){ queueToast('코인이 부족합니다.', 'warn'); return; }
+  STATE.coin -= d.price;
+  STATE.decorations[id] = (STATE.decorations[id]||0)+1;
+  queueToast(`${d.emoji} ${d.name}을(를) 설치했습니다!`, 'discover');
+  renderDecorBackdrop();
+  renderAll();
+  renderDecorModal();
+}
+/* 설치한 장식품을 수족관 바닥에 표시 */
+function renderDecorBackdrop(){
+  const area = document.getElementById('tankCanvasArea');
+  if(!area) return;
+  let layer = document.getElementById('decorLayer');
+  if(!layer){
+    layer = document.createElement('div');
+    layer.id = 'decorLayer';
+    area.insertBefore(layer, document.getElementById('fishLayer'));
+  }
+  layer.innerHTML = '';
+  let slot = 0;
+  const totalSlots = Object.values(STATE.decorations||{}).reduce((a,b)=>a+b,0);
+  for(const id of Object.keys(STATE.decorations||{})){
+    const d = decorationInfo(id);
+    const cnt = STATE.decorations[id];
+    for(let i=0;i<cnt;i++){
+      const el = document.createElement('div');
+      el.className = 'decor-item';
+      el.textContent = d.emoji;
+      const span = Math.max(1, totalSlots);
+      el.style.left = (6 + (slot/(span))*86 + Math.random()*4) + '%';
+      layer.appendChild(el);
+      slot++;
+    }
+  }
+}
+
+/* ---------- 도감 모달 (진화 계통도 포함, 시스템 7) ---------- */
 function renderDexModal(){
   const content = document.getElementById('dexContent');
   const allIds = Object.keys(SPECIES);
-  content.innerHTML = `<p style="font-size:12px;color:var(--text-mid);margin-bottom:12px;">발견 진행률: ${Object.keys(STATE.dex).length} / ${allIds.length} (탐사·부화·신종창조를 통해 계속 확장됩니다)</p>
+  // 진화 체인의 뿌리(다른 종이 evolvesTo로 가리키지 않는 종) 찾기
+  const isTarget = new Set();
+  for(const id of allIds){ if(SPECIES[id].evolvesTo) isTarget.add(SPECIES[id].evolvesTo); }
+  const roots = allIds.filter(id=>!isTarget.has(id));
+  // 절차/신종 어종은 체인 없이 별도 묶음
+  const chainHtml = roots.map(rootId=>{
+    // 루트에서 evolvesTo를 따라가며 체인 구성
+    const chain = [];
+    let cur = rootId, guard=0;
+    while(cur && guard<20){ chain.push(cur); cur = SPECIES[cur]?.evolvesTo; guard++; }
+    if(chain.length===1 && (SPECIES[rootId].procTier!==undefined || SPECIES[rootId].isNewborn)) return '';
+    const nodes = chain.map((id,i)=>{
+      const sp = SPECIES[id];
+      const found = !!STATE.dex[id];
+      const g = gradeInfo(sp.grade);
+      const arrow = i>0 ? '<span class="evo-tree-arrow">→</span>' : '';
+      return `${arrow}<div class="evo-tree-node ${found?'':'locked'}" style="${found?`border-color:${g.color}66;`:''}" title="${found?sp.name:'미발견'}">
+        <span class="etn-emoji">${found?sp.emoji:'❔'}</span>
+        <span class="etn-name" style="color:${found?g.color:'inherit'};">${found?sp.name:'???'}</span>
+      </div>`;
+    }).join('');
+    return `<div class="evo-tree-row">${nodes}</div>`;
+  }).filter(Boolean).join('');
+
+  const foundCount = Object.keys(STATE.dex).length;
+  content.innerHTML = `<p style="font-size:12px;color:var(--text-mid);margin-bottom:12px;">발견 진행률: ${foundCount} / ${allIds.length} · 미발견 종은 실루엣으로 표시됩니다. 탐사·부화·번식·신종창조로 계속 확장됩니다.</p>
+  <div class="section-label">진화 계통도</div>
+  <div class="evo-tree-wrap">${chainHtml}</div>
+  <div class="section-label" style="margin-top:16px;">전체 도감</div>
   <div class="grid-cards">` + allIds.map(id=>{
     const sp = SPECIES[id];
     const found = !!STATE.dex[id];
@@ -2861,6 +3447,19 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   document.getElementById('btnFeedAll').onclick = ()=>feedAllFish(false);
   document.getElementById('btnExploreShortcut').onclick = ()=>openModal('explore');
+
+  // 수족관 클릭 → 클릭 위치에 먹이 생성 (시스템 1)
+  const canvas = document.getElementById('tankCanvasArea');
+  if(canvas){
+    canvas.addEventListener('click', (e)=>{
+      // 물고기 스프라이트를 직접 탭한 경우는 상세창 열기로 처리되므로 제외
+      if(e.target.closest('.fish-sprite')) return;
+      const rect = canvas.getBoundingClientRect();
+      const xPct = ((e.clientX - rect.left)/rect.width)*100;
+      const yPct = ((e.clientY - rect.top)/rect.height)*100;
+      dropFoodAt(Math.max(3,Math.min(97,xPct)), Math.max(3,Math.min(60,yPct)), false);
+    });
+  }
   document.getElementById('btnShopShortcut').onclick = ()=>openModal('shop');
   document.getElementById('btnSettings').onclick = ()=>openModal('settings');
 
