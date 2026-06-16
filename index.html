@@ -355,6 +355,14 @@ html,body{
 
 /* 먹이 오브젝트 (시스템 1) */
 #foodLayer{position:absolute;inset:0;pointer-events:none;z-index:4;}
+/* Three.js 3D 캔버스 */
+#three-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;display:block;}
+/* 3D 모드일 때 DOM 물고기 스프라이트는 투명한 클릭 영역으로만 사용 */
+body.three-active .fish-sprite .body-emoji,
+body.three-active .fish-sprite .grade-glow,
+body.three-active .fish-sprite .variant-mark{opacity:0;}
+body.three-active .fish-sprite{z-index:6;}
+body.three-active #foodLayer{z-index:6;}
 .food-pellet{
   position:absolute;font-size:15px;transform:translate(-50%,-50%);
   pointer-events:none;filter:drop-shadow(0 0 3px rgba(255,200,80,0.7));
@@ -773,6 +781,7 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
       <div id="tankWrap">
         <div id="tankCanvasArea">
           <div class="tank-bg-layer" id="tankBgLayer"></div>
+          <canvas id="three-canvas"></canvas>
           <div id="foodLayer"></div>
           <div id="fishLayer"></div>
           <div id="fxLayer"></div>
@@ -969,6 +978,7 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ============================================================
    data.js
@@ -1024,6 +1034,23 @@ const PERSONALITIES = [
 function personalityInfo(id){ return PERSONALITIES.find(p=>p.id===id) || PERSONALITIES[0]; }
 function rollPersonality(){ return PERSONALITIES[Math.floor(Math.random()*PERSONALITIES.length)].id; }
 
+/* ---------- 친밀도 시스템 ----------
+   먹이를 줄 때마다 친밀도가 오르고, 단계별 특수 버프를 제공한다.
+   100 달성 시 마우스 커서를 따라다닌다.
+*/
+const FRIENDSHIP_TIERS = [
+  { min:0,   name:'낯섦',   emoji:'🤍', incomeMult:1.0,  happyDecayMult:1.0,  buffDesc:'-' },
+  { min:25,  name:'친근',   emoji:'💛', incomeMult:1.05, happyDecayMult:0.95, buffDesc:'수익 +5%' },
+  { min:50,  name:'신뢰',   emoji:'🧡', incomeMult:1.12, happyDecayMult:0.85, buffDesc:'수익 +12%, 행복 감소 -15%' },
+  { min:75,  name:'애착',   emoji:'❤️', incomeMult:1.22, happyDecayMult:0.7,  buffDesc:'수익 +22%, 행복 감소 -30%' },
+  { min:100, name:'단짝',   emoji:'💖', incomeMult:1.4,  happyDecayMult:0.5,  buffDesc:'수익 +40%, 행복 감소 -50%, 커서를 따라다님' },
+];
+function friendshipTier(v){
+  let t = FRIENDSHIP_TIERS[0];
+  for(const tier of FRIENDSHIP_TIERS){ if(v >= tier.min) t = tier; }
+  return t;
+}
+
 /* ---------- 진화 트리 (어종 정의) ---------- */
 const SPECIES = {
   goldfish: { id:'goldfish', name:'금붕어', emoji:'🐠', grade:'normal', baseSell:5, baseLifespan:480, region:'beginner_sea', evolvesTo:'golden_goldfish', evolveReq:{stage:'adult', level:5}, skill:null },
@@ -1037,6 +1064,26 @@ const SPECIES = {
   prism_guppy: { id:'prism_guppy', name:'프리즘 구피', emoji:'🌈', grade:'rare', baseSell:42, baseLifespan:700, region:'coral_reef', evolvesTo:null, evolveReq:null, skill:'유전자 샘플 획득량 +10%' },
   clownfish: { id:'clownfish', name:'흰동가리', emoji:'🐠', grade:'normal', baseSell:7, baseLifespan:430, region:'coral_reef', evolvesTo:'anemone_guardian', evolveReq:{stage:'adult', level:7}, skill:null },
   anemone_guardian: { id:'anemone_guardian', name:'말미잘 수호자', emoji:'🪸', grade:'rare', baseSell:48, baseLifespan:760, region:'coral_reef', evolvesTo:null, evolveReq:null, skill:'수족관 행복도 전체 +5' },
+
+  /* ===== 신규 해양 생물 (초중반 콘텐츠) ===== */
+  butterflyfish: { id:'butterflyfish', name:'나비고기', emoji:'🐠', grade:'normal', baseSell:8, baseLifespan:440, region:'coral_reef', evolvesTo:'royal_butterfly', evolveReq:{stage:'adult', level:9}, skill:null },
+  royal_butterfly: { id:'royal_butterfly', name:'로열 나비고기', emoji:'🦋', grade:'advanced', baseSell:20, baseLifespan:600, region:'coral_reef', evolvesTo:null, evolveReq:null, skill:'행복도 회복 +12%' },
+  angelfish: { id:'angelfish', name:'엔젤피쉬', emoji:'🐟', grade:'advanced', baseSell:18, baseLifespan:560, region:'coral_reef', evolvesTo:'emperor_angel', evolveReq:{stage:'adult', level:12}, skill:null },
+  emperor_angel: { id:'emperor_angel', name:'엠페러 엔젤', emoji:'👑', grade:'rare', baseSell:52, baseLifespan:780, region:'coral_reef', evolvesTo:null, evolveReq:null, skill:'판매가 +15%' },
+  pufferfish: { id:'pufferfish', name:'복어', emoji:'🐡', grade:'normal', baseSell:10, baseLifespan:470, region:'kelp_forest', evolvesTo:'spiky_puffer', evolveReq:{stage:'adult', level:10}, skill:null },
+  spiky_puffer: { id:'spiky_puffer', name:'가시 복어', emoji:'🐡', grade:'rare', baseSell:50, baseLifespan:740, region:'kelp_forest', evolvesTo:null, evolveReq:null, skill:'겁쟁이 성격 행복 감소 완화' },
+  stingray: { id:'stingray', name:'가오리', emoji:'🐟', grade:'advanced', baseSell:24, baseLifespan:640, region:'kelp_forest', evolvesTo:'manta_ray', evolveReq:{stage:'adult', level:14}, skill:null },
+  manta_ray: { id:'manta_ray', name:'만타 가오리', emoji:'🪁', grade:'epic', baseSell:115, baseLifespan:980, region:'kelp_forest', evolvesTo:null, evolveReq:null, skill:'탐사 시간 -8%' },
+  piranha: { id:'piranha', name:'피라냐', emoji:'🐟', grade:'advanced', baseSell:26, baseLifespan:600, region:'kelp_forest', evolvesTo:'razor_piranha', evolveReq:{stage:'adult', level:15}, skill:null },
+  razor_piranha: { id:'razor_piranha', name:'레이저 피라냐', emoji:'🦷', grade:'epic', baseSell:125, baseLifespan:900, region:'kelp_forest', evolvesTo:null, evolveReq:null, skill:'공격적 성격 수익 +10%' },
+
+  /* ===== 돌고래: 행복도 버프 희귀 생물 ===== */
+  dolphin: { id:'dolphin', name:'돌고래', emoji:'🐬', grade:'epic', baseSell:160, baseLifespan:1200, region:'kelp_forest', evolvesTo:null, evolveReq:null, skill:'수족관 전체 행복도 회복 속도 +25% (도감 효과)' },
+
+  /* ===== 고래류 (중후반) ===== */
+  orca: { id:'orca', name:'범고래', emoji:'🐋', grade:'legend', baseSell:340, baseLifespan:1600, region:'open_ocean', evolvesTo:null, evolveReq:null, skill:'전체 수익 +12% (도감 효과)' },
+  sperm_whale: { id:'sperm_whale', name:'향유고래', emoji:'🐳', grade:'myth', baseSell:560, baseLifespan:2000, region:'open_ocean', evolvesTo:null, evolveReq:null, skill:'심해 탐사 보상 +30%' },
+
 
   deepsea_lure: { id:'deepsea_lure', name:'아귀', emoji:'🐡', grade:'normal', baseSell:9, baseLifespan:520, region:'deep_sea', evolvesTo:'abyss_lantern', evolveReq:{stage:'adult', level:8}, skill:null },
   abyss_lantern: { id:'abyss_lantern', name:'심연 랜턴어', emoji:'🏮', grade:'epic', baseSell:110, baseLifespan:900, region:'deep_sea', evolvesTo:null, evolveReq:null, skill:'자동수집 수익 +25%' },
@@ -1066,10 +1113,14 @@ const SPECIES = {
   singularity_god: { id:'singularity_god', name:'특이점의 신어', emoji:'✨', grade:'god', baseSell:3000, baseLifespan:3000, region:'blackhole', evolvesTo:'cosmic_dragon', evolveReq:{stage:'adult', level:50}, skill:'전체 수익 +50%' },
   cosmic_dragon: { id:'cosmic_dragon', name:'코스믹 드래곤', emoji:'🐲', grade:'god', baseSell:8000, baseLifespan:5000, region:'blackhole', evolvesTo:null, evolveReq:null, skill:'전체 수익 +80% · 무한진화 게이트 개방' },
 
-  electric_shark: { id:'electric_shark', name:'전기상어', emoji:'🦈', grade:'epic', baseSell:150, baseLifespan:950, region:'gene_lab', evolvesTo:null, evolveReq:null, skill:'조합종 / 초당 수익 +12%' },
+  electric_shark: { id:'electric_shark', name:'전기상어', emoji:'🦈', grade:'epic', baseSell:150, baseLifespan:950, region:'gene_lab', evolvesTo:'thunder_shark', evolveReq:{stage:'adult', level:24}, skill:'조합종 / 초당 수익 +12%' },
+  thunder_shark: { id:'thunder_shark', name:'뇌전상어', emoji:'🦈', grade:'legend', baseSell:380, baseLifespan:1400, region:'open_ocean', evolvesTo:null, evolveReq:null, skill:'전체 수익 +15%' },
   abyssal_jelly: { id:'abyssal_jelly', name:'심연 해파리', emoji:'🪼', grade:'rare', baseSell:65, baseLifespan:780, region:'gene_lab', evolvesTo:null, evolveReq:null, skill:'조합종 / 행복도 자동 회복' },
   basic_eel: { id:'basic_eel', name:'전기뱀장어', emoji:'🐍', grade:'normal', baseSell:10, baseLifespan:460, region:'gene_lab_base', evolvesTo:null, evolveReq:null, skill:null },
-  basic_shark: { id:'basic_shark', name:'상어', emoji:'🦈', grade:'normal', baseSell:12, baseLifespan:500, region:'gene_lab_base', evolvesTo:null, evolveReq:null, skill:null },
+  reef_shark: { id:'reef_shark', name:'산호초 상어', emoji:'🦈', grade:'rare', baseSell:70, baseLifespan:880, region:'open_ocean', evolvesTo:'great_white', evolveReq:{stage:'adult', level:20}, skill:'중후반 어종' },
+  great_white: { id:'great_white', name:'백상아리', emoji:'🦈', grade:'epic', baseSell:175, baseLifespan:1100, region:'open_ocean', evolvesTo:'megalodon', evolveReq:{stage:'adult', level:30}, skill:'판매가 +25%' },
+  megalodon: { id:'megalodon', name:'메갈로돈', emoji:'🦈', grade:'legend', baseSell:420, baseLifespan:1700, region:'open_ocean', evolvesTo:null, evolveReq:null, skill:'전체 수익 +18%' },
+  basic_shark: { id:'basic_shark', name:'상어', emoji:'🦈', grade:'rare', baseSell:68, baseLifespan:900, region:'open_ocean', evolvesTo:null, evolveReq:null, skill:'중후반 어종' },
   basic_jelly: { id:'basic_jelly', name:'해파리', emoji:'🪼', grade:'normal', baseSell:8, baseLifespan:440, region:'gene_lab_base', evolvesTo:null, evolveReq:null, skill:null },
   basic_deepfish: { id:'basic_deepfish', name:'심해어', emoji:'🐡', grade:'normal', baseSell:9, baseLifespan:450, region:'gene_lab_base', evolvesTo:null, evolveReq:null, skill:null },
   crystal_eel: { id:'crystal_eel', name:'크리스탈 장어', emoji:'🐍', grade:'legend', baseSell:190, baseLifespan:1050, region:'gene_lab', evolvesTo:null, evolveReq:null, skill:'조합종 / 진화석 자동 생성' },
@@ -1159,16 +1210,18 @@ function eggTypeInfo(id){ return EGG_TYPES.find(e=>e.id===id); }
 */
 const REGIONS = [
   { id:'beginner_sea', name:'초보 바다', emoji:'🌊', unlockCost:0, desc:'수족관 여정이 시작되는 평화로운 바다.', species:['goldfish','golden_goldfish'], exploreTime:6, exploreCost:0, rewardGeneMin:1, rewardGeneMax:2, eggDropRate:0.5, eggPool:['common_egg'] },
-  { id:'coral_reef', name:'산호 해역', emoji:'🪸', unlockCost:120, desc:'화려한 산호초 속에 숨어사는 열대어들.', species:['coral_guppy','clownfish','rainbow_guppy'], exploreTime:10, exploreCost:8, rewardGeneMin:2, rewardGeneMax:4, eggDropRate:0.55, eggPool:['common_egg','rare_egg'] },
-  { id:'deep_sea', name:'심해', emoji:'🌑', unlockCost:400, desc:'빛이 닿지 않는 어둠 속, 기이한 생명체들의 영역.', species:['deepsea_lure','giant_squid_jr','abyss_lantern'], exploreTime:15, exploreCost:20, rewardGeneMin:3, rewardGeneMax:6, eggDropRate:0.6, eggPool:['common_egg','rare_egg'] },
-  { id:'glacier_sea', name:'빙하 바다', emoji:'🧊', unlockCost:900, desc:'얼어붙은 해류 아래 잠든 차가운 생명들.', species:['ice_minnow','frost_koi'], exploreTime:20, exploreCost:35, rewardGeneMin:4, rewardGeneMax:7, eggDropRate:0.6, eggPool:['rare_egg'] },
-  { id:'volcano_sea', name:'화산 해역', emoji:'🌋', unlockCost:1700, desc:'뜨거운 용암 줄기 사이를 헤엄치는 불의 어종.', species:['ember_tetra','magma_eel'], exploreTime:26, exploreCost:55, rewardGeneMin:5, rewardGeneMax:9, eggDropRate:0.62, eggPool:['rare_egg','cosmic_egg'] },
-  { id:'moon_sea', name:'달 바다', emoji:'🌙', unlockCost:3200, desc:'우주 진출의 첫 관문, 달의 지하 해양.', species:['lunar_carp','star_fish','astro_carp'], exploreTime:32, exploreCost:90, rewardGeneMin:6, rewardGeneMax:11, eggDropRate:0.65, eggPool:['rare_egg','cosmic_egg'] },
-  { id:'mars_sea', name:'화성 해역', emoji:'🔴', unlockCost:5800, desc:'붉은 행성의 지하에 흐르는 용암 바다.', species:['mars_crawler','lava_fish'], exploreTime:40, exploreCost:140, rewardGeneMin:7, rewardGeneMax:13, eggDropRate:0.66, eggPool:['cosmic_egg'] },
-  { id:'jupiter_sea', name:'목성 폭풍 해역', emoji:'🌀', unlockCost:9500, desc:'끝없는 폭풍 속에서 전기를 두른 생명체들.', species:['storm_jelly','thunder_fish'], exploreTime:48, exploreCost:200, rewardGeneMin:9, rewardGeneMax:16, eggDropRate:0.68, eggPool:['cosmic_egg','mythic_egg'] },
-  { id:'saturn_sea', name:'토성 고리 해역', emoji:'🪐', unlockCost:16000, desc:'얼음과 돌의 고리 사이를 떠도는 신비한 어종.', species:['ring_drifter','gravity_fish','crystal_drifter'], exploreTime:58, exploreCost:300, rewardGeneMin:11, rewardGeneMax:19, eggDropRate:0.7, eggPool:['cosmic_egg','mythic_egg'] },
-  { id:'blackhole', name:'블랙홀 심연', emoji:'⚫', unlockCost:28000, desc:'모든 것을 삼키는 심연, 우주 최고의 어종이 잠든 곳.', species:['void_wraith','nebula_whale','galaxy_fish'], exploreTime:70, exploreCost:480, rewardGeneMin:14, rewardGeneMax:24, eggDropRate:0.75, eggPool:['mythic_egg'] },
-  { id:'deep_space_frontier', name:'심우주 개척지', emoji:'🛰️', unlockCost:45000, desc:'아직 지도에 없는 미지의 영역. 무한히 새로운 생명체가 발견된다.', species:[], exploreTime:85, exploreCost:700, rewardGeneMin:18, rewardGeneMax:30, eggDropRate:0.8, eggPool:['mythic_egg'], isProcedural:true },
+  { id:'coral_reef', name:'산호 해역', emoji:'🪸', unlockCost:150, desc:'화려한 산호초 속 열대어들. 흰동가리·나비고기·엔젤피쉬가 산다.', species:['coral_guppy','clownfish','rainbow_guppy','butterflyfish','angelfish'], exploreTime:11, exploreCost:10, rewardGeneMin:2, rewardGeneMax:4, eggDropRate:0.55, eggPool:['common_egg','rare_egg'] },
+  { id:'kelp_forest', name:'켈프 숲', emoji:'🌿', unlockCost:500, desc:'거대한 해초 숲. 복어·가오리·피라냐, 그리고 운이 좋으면 돌고래를 만난다.', species:['pufferfish','stingray','piranha','spiky_puffer','dolphin'], exploreTime:16, exploreCost:22, rewardGeneMin:3, rewardGeneMax:6, eggDropRate:0.58, eggPool:['common_egg','rare_egg'] },
+  { id:'deep_sea', name:'심해', emoji:'🌑', unlockCost:1100, desc:'빛이 닿지 않는 어둠 속, 기이한 생명체들의 영역.', species:['deepsea_lure','giant_squid_jr','abyss_lantern'], exploreTime:20, exploreCost:36, rewardGeneMin:3, rewardGeneMax:6, eggDropRate:0.6, eggPool:['common_egg','rare_egg'] },
+  { id:'open_ocean', name:'대양', emoji:'🌊', unlockCost:2400, desc:'넓은 바다의 최상위 포식자들. 상어와 고래가 군림하는 중후반 영역.', species:['reef_shark','basic_shark','orca','great_white','sperm_whale'], exploreTime:26, exploreCost:60, rewardGeneMin:5, rewardGeneMax:9, eggDropRate:0.62, eggPool:['rare_egg'] },
+  { id:'glacier_sea', name:'빙하 바다', emoji:'🧊', unlockCost:4200, desc:'얼어붙은 해류 아래 잠든 차가운 생명들.', species:['ice_minnow','frost_koi'], exploreTime:30, exploreCost:90, rewardGeneMin:6, rewardGeneMax:10, eggDropRate:0.62, eggPool:['rare_egg'] },
+  { id:'volcano_sea', name:'화산 해역', emoji:'🌋', unlockCost:7000, desc:'뜨거운 용암 줄기 사이를 헤엄치는 불의 어종.', species:['ember_tetra','magma_eel'], exploreTime:36, exploreCost:130, rewardGeneMin:7, rewardGeneMax:12, eggDropRate:0.64, eggPool:['rare_egg','cosmic_egg'] },
+  { id:'moon_sea', name:'달 바다', emoji:'🌙', unlockCost:11000, desc:'우주 진출의 첫 관문, 달의 지하 해양.', species:['lunar_carp','star_fish','astro_carp'], exploreTime:42, exploreCost:200, rewardGeneMin:8, rewardGeneMax:14, eggDropRate:0.66, eggPool:['rare_egg','cosmic_egg'] },
+  { id:'mars_sea', name:'화성 해역', emoji:'🔴', unlockCost:18000, desc:'붉은 행성의 지하에 흐르는 용암 바다.', species:['mars_crawler','lava_fish'], exploreTime:50, exploreCost:300, rewardGeneMin:10, rewardGeneMax:17, eggDropRate:0.68, eggPool:['cosmic_egg'] },
+  { id:'jupiter_sea', name:'목성 폭풍 해역', emoji:'🌀', unlockCost:30000, desc:'끝없는 폭풍 속에서 전기를 두른 생명체들.', species:['storm_jelly','thunder_fish'], exploreTime:58, exploreCost:420, rewardGeneMin:12, rewardGeneMax:20, eggDropRate:0.7, eggPool:['cosmic_egg','mythic_egg'] },
+  { id:'saturn_sea', name:'토성 고리 해역', emoji:'🪐', unlockCost:50000, desc:'얼음과 돌의 고리 사이를 떠도는 신비한 어종.', species:['ring_drifter','gravity_fish','crystal_drifter'], exploreTime:66, exploreCost:600, rewardGeneMin:14, rewardGeneMax:24, eggDropRate:0.72, eggPool:['cosmic_egg','mythic_egg'] },
+  { id:'blackhole', name:'블랙홀 심연', emoji:'⚫', unlockCost:90000, desc:'모든 것을 삼키는 심연, 우주 최고의 어종이 잠든 곳.', species:['void_wraith','nebula_whale','galaxy_fish'], exploreTime:80, exploreCost:900, rewardGeneMin:18, rewardGeneMax:30, eggDropRate:0.75, eggPool:['mythic_egg'] },
+  { id:'deep_space_frontier', name:'심우주 개척지', emoji:'🛰️', unlockCost:150000, desc:'아직 지도에 없는 미지의 영역. 무한히 새로운 생명체가 발견된다.', species:[], exploreTime:95, exploreCost:1300, rewardGeneMin:24, rewardGeneMax:40, eggDropRate:0.8, eggPool:['mythic_egg'], isProcedural:true },
 ];
 
 /* ---------- 행성 개척 시스템 (장기 콘텐츠) ----------
@@ -1205,12 +1258,13 @@ const SHOP_FISH = [
   { species:'goldfish', price:25 },
   { species:'coral_guppy', price:50 },
   { species:'clownfish', price:55 },
-  { species:'basic_eel', price:75 },
-  { species:'basic_shark', price:100 },
-  { species:'basic_jelly', price:65 },
-  { species:'basic_deepfish', price:85 },
-  { species:'ice_minnow', price:130 },
-  { species:'ember_tetra', price:150 },
+  { species:'butterflyfish', price:70 },
+  { species:'angelfish', price:120 },
+  { species:'pufferfish', price:150 },
+  { species:'stingray', price:280 },
+  { species:'piranha', price:320 },
+  { species:'basic_eel', price:90 },
+  { species:'ice_minnow', price:600 },
 ];
 
 /* ---------- 상점: 소모품/장비 ---------- */
@@ -1398,6 +1452,8 @@ class Fish {
     this.gender = opts.gender || (Math.random()<0.5 ? 'M' : 'F');
     // 진화 게이지 (먹이로 충전, 시스템 1)
     this.evoGauge = opts.evoGauge || 0;
+    // 친밀도 (먹이를 줄 때 증가, 0~100)
+    this.friendship = opts.friendship || 0;
     // AI 상태 머신: 'idle' | 'seekFood' | 'explore' | 'chase'
     this.aiState = 'idle';
     this.foodTarget = null;       // 추적 중인 먹이 uid
@@ -1410,9 +1466,11 @@ class Fish {
   get variantInfo(){ return variantInfo(this.variant); }
   get stageInfo(){ return GROWTH_STAGES.find(s=>s.id===this.stage); }
   get pers(){ return personalityInfo(this.personality); }
+  get friendTier(){ return friendshipTier(this.friendship||0); }
 
   xpToNextLevel(){
-    return Math.floor(20 * Math.pow(1.16, this.level-1));
+    // 성장 속도 완화: 기본 요구치 상향 + 성장 곡선 가파르게
+    return Math.floor(32 * Math.pow(1.21, this.level-1));
   }
 
   sellPrice(){
@@ -1427,9 +1485,9 @@ class Fish {
   incomePerSecond(){
     const stageMult = this.stageInfo.xpMult;
     const lvlMult = 1 + this.level*0.05;
-    const base = 0.12 * this.grade.mult * stageMult * lvlMult;
+    const base = 0.085 * this.grade.mult * stageMult * lvlMult;
     const ivMult = this.ivs ? this.ivs.income/100 : 1;
-    return base * this.pers.incomeMult * ivMult * this.variantInfo.incomeMult;
+    return base * this.pers.incomeMult * ivMult * this.variantInfo.incomeMult * this.friendTier.incomeMult;
   }
   incomePerMinute(){
     return Math.round(this.incomePerSecond()*60);
@@ -1450,9 +1508,9 @@ class Fish {
   }
 
   updateStage(){
-    if(this.level >= 25) this.stage = 'giant';
-    else if(this.level >= 12) this.stage = 'adult';
-    else if(this.level >= 5) this.stage = 'juv';
+    if(this.level >= 35) this.stage = 'giant';
+    else if(this.level >= 18) this.stage = 'adult';
+    else if(this.level >= 8) this.stage = 'juv';
     else this.stage = 'fry';
   }
 
@@ -1526,7 +1584,8 @@ function serializeState(state){
       uid:f.uid, species:f.species, level:f.level, xp:f.xp, stage:f.stage,
       happiness:f.happiness, age:f.age, bornAt:f.bornAt, personality:f.personality,
       ivs:f.ivs, hunger:f.hunger, curiosity:f.curiosity, aggression:f.aggression,
-      intelligence:f.intelligence, variant:f.variant, gender:f.gender, evoGauge:f.evoGauge
+      intelligence:f.intelligence, variant:f.variant, gender:f.gender, evoGauge:f.evoGauge,
+      friendship:f.friendship
     })),
     dex:state.dex,
     unlockedRegions:state.unlockedRegions,
@@ -1642,6 +1701,9 @@ function computeTotalIncomePerSecond(state){
   if(hasGalaxy) total *= 1.05;
   if(hasGod) total *= 1.5;
   if(hasDragon) total *= 1.8;
+  if(state.fish.some(f=>f.species==='orca')) total *= 1.12;
+  if(state.fish.some(f=>f.species==='thunder_shark')) total *= 1.15;
+  if(state.fish.some(f=>f.species==='megalodon')) total *= 1.18;
   if(state.automations.auto_collector) total *= 1.3;
   total *= (1 + getPlanetBonus(state, 'income'));
   total *= (1 + getDecorationBonus(state, 'income'));
@@ -1666,6 +1728,376 @@ function getDecorationBonus(state, bonusType){
 </script>
 <script>
 /* ============================================================
+   render3d.js
+   Three.js 기반 2.5D 수족관 렌더러.
+   - 빌보드(이모지 텍스처) 물고기 메시 + 깊이(z)
+   - 바닥 그림자, 방향광/환경광, 수면 셰이더(반사·굴절 느낌)
+   - 카메라 줌(휠/핀치), 버블·코스틱 파티클
+   - 모바일 최적화: 픽셀비율 캡, 적응형 파티클 수, WebGL 미지원 시 2D 폴백
+   ============================================================ */
+const Aquarium3D = (function(){
+  let scene, camera, renderer, clock;
+  let fishMeshes = {};   // uid -> {mesh, sprite, tex}
+  let foodMeshes = {};   // uid -> mesh
+  let textureCache = {}; // emoji+color -> THREE.Texture
+  let waterMesh, floorMesh, bubbleSystem;
+  let enabled = false;
+  let raf = null;
+  let zoom = 1;          // 1=기본, 0.6~1.8 범위
+  let targetZoom = 1;
+  let regionTint = new THREE.Color(0x0a1830);
+  let isMobile = false;
+  let qualityScale = 1;
+
+  // 좌표 변환: 게임의 x/y(0~100%) → 3D 월드 좌표
+  const WORLD_W = 100, WORLD_H = 56;
+  function toWorldX(xPct){ return (xPct/100 - 0.5) * WORLD_W; }
+  function toWorldY(yPct){ return (0.5 - yPct/100) * WORLD_H; }
+
+  function detectMobile(){
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+           Math.min(window.innerWidth, window.innerHeight) < 700;
+  }
+
+  function makeEmojiTexture(emoji, glowColor){
+    const key = emoji + '|' + (glowColor||'');
+    if(textureCache[key]) return textureCache[key];
+    const size = isMobile ? 96 : 128;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    const ctx = cv.getContext('2d');
+    if(glowColor){
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = size*0.18;
+    }
+    ctx.font = `${Math.floor(size*0.72)}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, size/2, size/2*1.06);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    textureCache[key] = tex;
+    return tex;
+  }
+
+  function init(){
+    const canvas = document.getElementById('three-canvas');
+    if(!canvas || typeof THREE === 'undefined') return false;
+    let gl;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:false });
+    } catch(e){ return false; }
+    isMobile = detectMobile();
+    qualityScale = isMobile ? 0.85 : 1;
+
+    const w = canvas.clientWidth || 800, h = canvas.clientHeight || 400;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isMobile?1.5:2));
+    renderer.setSize(w, h, false);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x06101f, 0.012);
+
+    camera = new THREE.PerspectiveCamera(48, w/h, 0.1, 500);
+    camera.position.set(0, 6, 78);
+    camera.lookAt(0, 0, 0);
+
+    clock = new THREE.Clock();
+
+    // 조명: 환경광 + 위에서 내려오는 방향광(그림자) + 청록 포인트라이트
+    const amb = new THREE.AmbientLight(0x88aacc, 0.75);
+    scene.add(amb);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+    dir.position.set(-20, 60, 30);
+    dir.castShadow = true;
+    dir.shadow.mapSize.width = isMobile?512:1024;
+    dir.shadow.mapSize.height = isMobile?512:1024;
+    dir.shadow.camera.near = 1; dir.shadow.camera.far = 200;
+    dir.shadow.camera.left = -70; dir.shadow.camera.right = 70;
+    dir.shadow.camera.top = 60; dir.shadow.camera.bottom = -60;
+    scene.add(dir);
+    const pt = new THREE.PointLight(0x4fd8ff, 0.5, 200);
+    pt.position.set(20, 10, 40);
+    scene.add(pt);
+
+    buildFloor();
+    buildWater();
+    buildBubbles();
+    bindZoom(canvas);
+
+    window.addEventListener('resize', onResize);
+    enabled = true;
+    document.body.classList.add('three-active');
+    loop();
+    return true;
+  }
+
+  function buildFloor(){
+    const geo = new THREE.PlaneGeometry(WORLD_W*1.6, WORLD_H*1.6, 1, 1);
+    const mat = new THREE.MeshStandardMaterial({ color:0x16314f, roughness:0.95, metalness:0.05 });
+    floorMesh = new THREE.Mesh(geo, mat);
+    floorMesh.rotation.x = -Math.PI/2.1;
+    floorMesh.position.set(0, -WORLD_H/2 - 4, -10);
+    floorMesh.receiveShadow = true;
+    scene.add(floorMesh);
+  }
+
+  // 수면: 정점을 사인파로 흔들어 굴절/반사 느낌
+  function buildWater(){
+    const segs = isMobile ? 18 : 30;
+    const geo = new THREE.PlaneGeometry(WORLD_W*1.6, 40, segs, segs);
+    const mat = new THREE.MeshStandardMaterial({
+      color:0x2a6f9e, transparent:true, opacity:0.34,
+      roughness:0.15, metalness:0.6, side:THREE.DoubleSide
+    });
+    waterMesh = new THREE.Mesh(geo, mat);
+    waterMesh.rotation.x = -Math.PI/2;
+    waterMesh.position.set(0, WORLD_H/2 + 2, -6);
+    waterMesh.userData.base = geo.attributes.position.array.slice(0);
+    scene.add(waterMesh);
+  }
+
+  function animateWater(t){
+    if(!waterMesh) return;
+    const pos = waterMesh.geometry.attributes.position;
+    const base = waterMesh.userData.base;
+    for(let i=0;i<pos.count;i++){
+      const x = base[i*3], y = base[i*3+1];
+      pos.array[i*3+2] = Math.sin(x*0.15 + t*1.6)*1.4 + Math.cos(y*0.2 + t*1.1)*1.2;
+    }
+    pos.needsUpdate = true;
+  }
+
+  function buildBubbles(){
+    const count = isMobile ? 60 : 120;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count*3);
+    const speeds = new Float32Array(count);
+    for(let i=0;i<count;i++){
+      positions[i*3] = (Math.random()-0.5)*WORLD_W;
+      positions[i*3+1] = (Math.random()-0.5)*WORLD_H;
+      positions[i*3+2] = (Math.random()-0.5)*30;
+      speeds[i] = 4 + Math.random()*8;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.userData = { speeds };
+    const mat = new THREE.PointsMaterial({ color:0xbfe8ff, size:1.1, transparent:true, opacity:0.5, depthWrite:false });
+    bubbleSystem = new THREE.Points(geo, mat);
+    scene.add(bubbleSystem);
+  }
+
+  function animateBubbles(dt){
+    if(!bubbleSystem) return;
+    const pos = bubbleSystem.geometry.attributes.position;
+    const speeds = bubbleSystem.geometry.userData.speeds;
+    for(let i=0;i<pos.count;i++){
+      pos.array[i*3+1] += speeds[i]*dt;
+      if(pos.array[i*3+1] > WORLD_H/2){ pos.array[i*3+1] = -WORLD_H/2; }
+    }
+    pos.needsUpdate = true;
+  }
+
+  function bindZoom(canvas){
+    canvas.addEventListener('wheel', (e)=>{
+      e.preventDefault();
+      targetZoom = Math.max(0.6, Math.min(1.8, targetZoom + (e.deltaY>0 ? 0.1 : -0.1)));
+    }, {passive:false});
+    // 핀치 줌(모바일)
+    let pinchStart = null;
+    canvas.addEventListener('touchstart', (e)=>{
+      if(e.touches.length===2){
+        const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+        pinchStart = Math.hypot(dx,dy);
+      }
+    }, {passive:true});
+    canvas.addEventListener('touchmove', (e)=>{
+      if(e.touches.length===2 && pinchStart){
+        const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+        const d = Math.hypot(dx,dy);
+        targetZoom = Math.max(0.6, Math.min(1.8, targetZoom * (pinchStart/d)));
+        pinchStart = d;
+      }
+    }, {passive:true});
+    canvas.addEventListener('touchend', ()=>{ pinchStart=null; });
+  }
+
+  function onResize(){
+    if(!renderer || !camera) return;
+    const canvas = renderer.domElement;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if(w===0||h===0) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+
+  // 물고기 메시 추가
+  function addFish(f){
+    if(!enabled || fishMeshes[f.uid]) return;
+    const glow = f.variant ? f.variantInfo.glow : (['epic','legend','myth','cosmic','trans','god'].includes(f.def.grade) ? f.grade.color : null);
+    const tex = makeEmojiTexture(f.def.emoji, glow);
+    const mat = new THREE.MeshBasicMaterial({ map:tex, transparent:true, depthWrite:false });
+    const baseScale = 10 * (f.stageInfo ? f.stageInfo.scale : 1);
+    const geo = new THREE.PlaneGeometry(baseScale, baseScale);
+    const mesh = new THREE.Mesh(geo, mat);
+    // 깊이: uid 해시로 z 분산
+    const z = ((f.uid.charCodeAt(2)||50)%20) - 10;
+    mesh.position.set(toWorldX(f.x), toWorldY(f.y), z);
+    // 그림자용 더미(아래 바닥에 옅은 타원)
+    scene.add(mesh);
+    fishMeshes[f.uid] = { mesh, tex, z, lastEmoji:f.def.emoji, lastVariant:f.variant, lastStage:f.stage };
+  }
+
+  function removeFish(uid){
+    const o = fishMeshes[uid];
+    if(!o) return;
+    scene.remove(o.mesh);
+    o.mesh.geometry.dispose();
+    o.mesh.material.dispose();
+    delete fishMeshes[uid];
+  }
+
+  // 매 프레임 물고기 위치/방향 동기화 (main.js의 f.x/f.y/f.dir를 읽음)
+  function syncFish(fishList){
+    if(!enabled) return;
+    const alive = new Set();
+    for(const f of fishList){
+      alive.add(f.uid);
+      let o = fishMeshes[f.uid];
+      // 진화/변종/단계 변화 시 텍스처 갱신
+      if(o && (o.lastEmoji!==f.def.emoji || o.lastVariant!==f.variant || o.lastStage!==f.stage)){
+        removeFish(f.uid); o = null;
+      }
+      if(!o){ addFish(f); o = fishMeshes[f.uid]; if(!o) continue; }
+      const tx = toWorldX(f.x), ty = toWorldY(f.y);
+      // 부드러운 보간
+      o.mesh.position.x += (tx - o.mesh.position.x)*0.25;
+      o.mesh.position.y += (ty - o.mesh.position.y)*0.25;
+      // 진행 방향에 따라 좌우 반전
+      o.mesh.scale.x = (f.dir < 0) ? -1 : 1;
+      // 먹는 중이면 살짝 확대
+      const eat = (f.eatFlash>0) ? 1.2 : 1.0;
+      o.mesh.scale.y = eat;
+      o.mesh.scale.x *= eat;
+    }
+    // 사라진 물고기 정리
+    for(const uid of Object.keys(fishMeshes)){
+      if(!alive.has(uid)) removeFish(uid);
+    }
+  }
+
+  function addFood(food){
+    if(!enabled || foodMeshes[food.uid]) return;
+    const tex = makeEmojiTexture(food.premium?'🍣':'🍤', 'rgba(255,200,80,0.8)');
+    const mat = new THREE.MeshBasicMaterial({ map:tex, transparent:true, depthWrite:false });
+    const geo = new THREE.PlaneGeometry(5, 5);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(toWorldX(food.x), toWorldY(food.y), 5);
+    scene.add(mesh);
+    foodMeshes[food.uid] = mesh;
+  }
+
+  function syncFood(foodList){
+    if(!enabled) return;
+    const alive = new Set();
+    for(const food of foodList){
+      if(food.eaten) continue;
+      alive.add(food.uid);
+      let m = foodMeshes[food.uid];
+      if(!m){ addFood(food); m = foodMeshes[food.uid]; if(!m) continue; }
+      m.position.x = toWorldX(food.x);
+      m.position.y = toWorldY(food.y);
+    }
+    for(const uid of Object.keys(foodMeshes)){
+      if(!alive.has(uid)){
+        scene.remove(foodMeshes[uid]);
+        foodMeshes[uid].geometry.dispose();
+        foodMeshes[uid].material.dispose();
+        delete foodMeshes[uid];
+      }
+    }
+  }
+
+  // 지역별 배경 색조 변경
+  function setRegion(regionId){
+    if(!enabled) return;
+    const tints = {
+      beginner_sea:0x0a3050, coral_reef:0x0e4a5a, kelp_forest:0x0c3a2a,
+      deep_sea:0x040c1a, open_ocean:0x083048, glacier_sea:0x0a2838,
+      volcano_sea:0x2a0e0a, moon_sea:0x0a0a22, mars_sea:0x2a0e0a,
+      jupiter_sea:0x141026, saturn_sea:0x101828, blackhole:0x05050f,
+      deep_space_frontier:0x080816
+    };
+    const c = tints[regionId] !== undefined ? tints[regionId] : 0x0a1830;
+    if(scene.fog) scene.fog.color.setHex(c);
+    renderer.setClearColor(c, 0);
+    if(floorMesh) floorMesh.material.color.setHex(c).offsetHSL(0,0,0.08);
+  }
+
+  // 레벨업/희귀등장 파티클 버스트
+  function burst(xPct, yPct, color){
+    if(!enabled) return;
+    const n = isMobile?14:24;
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(n*3);
+    const vel = [];
+    const wx = toWorldX(xPct), wy = toWorldY(yPct);
+    for(let i=0;i<n;i++){
+      pos[i*3]=wx; pos[i*3+1]=wy; pos[i*3+2]=6;
+      const a = Math.random()*Math.PI*2, sp = 8+Math.random()*16;
+      vel.push([Math.cos(a)*sp, Math.sin(a)*sp]);
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    const mat = new THREE.PointsMaterial({ color:new THREE.Color(color||0xffce54), size:2.2, transparent:true, opacity:1, depthWrite:false });
+    const pts = new THREE.Points(geo, mat);
+    scene.add(pts);
+    let life = 0;
+    const tick = ()=>{
+      life += 0.016;
+      const p = geo.attributes.position;
+      for(let i=0;i<n;i++){
+        p.array[i*3] += vel[i][0]*0.016;
+        p.array[i*3+1] += vel[i][1]*0.016 - life*0.3;
+      }
+      p.needsUpdate = true;
+      mat.opacity = Math.max(0, 1-life*1.6);
+      if(life < 0.65) requestAnimationFrame(tick);
+      else { scene.remove(pts); geo.dispose(); mat.dispose(); }
+    };
+    tick();
+  }
+
+  function loop(){
+    if(!enabled) return;
+    raf = requestAnimationFrame(loop);
+    const dt = Math.min(0.05, clock.getDelta());
+    const t = clock.elapsedTime;
+    // 줌 보간
+    zoom += (targetZoom - zoom)*0.12;
+    camera.position.z = 78 * zoom;
+    camera.position.y = 6 * zoom;
+    camera.lookAt(0,0,0);
+    animateWater(t);
+    animateBubbles(dt);
+    renderer.render(scene, camera);
+  }
+
+  function isEnabled(){ return enabled; }
+
+  function dispose(){
+    enabled = false;
+    if(raf) cancelAnimationFrame(raf);
+    document.body.classList.remove('three-active');
+  }
+
+  return { init, addFish, removeFish, syncFish, addFood, syncFood, setRegion, burst, isEnabled, dispose };
+})();
+
+</script>
+<script>
+/* ============================================================
    main.js
    UI 렌더링, 이벤트 처리, 게임 루프
    ============================================================ */
@@ -1679,6 +2111,7 @@ let geneSlotB = null;
 let dismantleSlot = null;
 let tankRect = { w: 800, h: 400 };
 let coinFlashAccum = 0;
+let CURSOR = { x: 50, y: 30, active: false, lastMove: 0 };
 
 /* ---------- 초기화 ---------- */
 function initGame(){
@@ -1696,6 +2129,16 @@ function initGame(){
   spawnAmbientBubbles();
   spawnLightRays();
   renderDecorBackdrop();
+  // Three.js 2.5D 렌더러 초기화 (실패 시 자동으로 2D 유지)
+  try {
+    if(typeof Aquarium3D !== 'undefined' && typeof THREE !== 'undefined'){
+      const ok = Aquarium3D.init();
+      if(ok){
+        Aquarium3D.setRegion(STATE.currentRegion);
+        for(const f of STATE.fish) Aquarium3D.addFish(f);
+      }
+    }
+  } catch(e){ console.warn('3D init failed, using 2D', e); }
 }
 
 function applyOfflineProgress(){
@@ -1759,10 +2202,12 @@ function gameTick(deltaSec){
     STATE.coin += perSec * deltaSec;
     coinFlashAccum += perSec * deltaSec;
   }
-  // 행복도 자연 감소 / 자동회복 어종 보정
+  // 행복도 자연 감소 / 친밀도·돌고래·자동회복 보정
+  const hasDolphin = STATE.fish.some(f=>f.species==='dolphin');
+  const dolphinMult = hasDolphin ? 0.75 : 1.0; // 돌고래 도감 효과: 전체 행복 감소 완화
   for(const f of STATE.fish){
     f.age += deltaSec;
-    let decay = 0.06 * deltaSec * f.pers.happyDecayMult;
+    let decay = 0.06 * deltaSec * f.pers.happyDecayMult * f.friendTier.happyDecayMult * dolphinMult;
     if(f.species==='golden_goldfish' || f.species==='sun_goldfish' || f.species==='star_fish' || f.species==='galaxy_fish') decay *= 0.8;
     f.happiness = Math.max(0, f.happiness - decay);
   }
@@ -1968,6 +2413,11 @@ function renderLoop(t){
   lastFrame = t;
   updateFoodPellets(dt);
   animateFishPositions(dt);
+  // Three.js 동기화 (활성 시)
+  if(typeof Aquarium3D !== 'undefined' && Aquarium3D.isEnabled()){
+    Aquarium3D.syncFish(STATE.fish);
+    Aquarium3D.syncFood(STATE.food);
+  }
   requestAnimationFrame(renderLoop);
 }
 
@@ -2028,6 +2478,12 @@ function fishEatFood(f, food){
   const leveled = f.addXp(xpGain);
   f.happiness = Math.min(100, f.happiness + (premium?16:9)*happyIv);
   f.evoGauge = Math.min(100, (f.evoGauge||0) + (premium?12:7));
+  // 친밀도 증가 (먹이를 줄 때)
+  const beforeTier = f.friendTier.name;
+  f.friendship = Math.min(100, (f.friendship||0) + (premium?4:2));
+  if(f.friendTier.name !== beforeTier){
+    queueToast(`${f.def.emoji} ${f.def.name}와(과) 더 가까워졌습니다! (${f.friendTier.emoji} ${f.friendTier.name})`, 'discover');
+  }
   STATE.stats.totalFeed++;
   bumpQuestProgress('feedCount', 1);
   spawnFloatingText(f, `+${Math.round(xpGain*f.pers.xpMult)} XP`, 'var(--accent-cyan)');
@@ -2060,19 +2516,27 @@ function animateFishPositions(dt){
     const intel = (f.intelligence||50)/100;
     // 먹이 탐지 반경: 지능이 높을수록 넓게 탐지
     const detectRadius = 25 + intel*40;
+    const bonded = (f.friendship||0) >= 100;
+    const cursorFresh = CURSOR.active && (Date.now()-CURSOR.lastMove < 2500);
     if(nearFood && (f.hunger > 30 || nearFood.dist < detectRadius*0.5) && nearFood.dist < detectRadius){
       f.aiState = 'seekFood';
       f.foodTarget = nearFood.food.uid;
       f.targetX = nearFood.food.x;
       f.targetY = nearFood.food.y;
-    } else if(f.aiState === 'seekFood'){
-      // 목표 먹이가 사라졌으면 idle 복귀
+    } else if(bonded && cursorFresh){
+      // 친밀도 100: 커서를 따라다님 (먹이가 급하지 않을 때)
+      f.aiState = 'follow';
+      // 커서 주변에 약간 흩어져 모이도록 오프셋
+      f.targetX = CURSOR.x + (f.uid.charCodeAt(2)%10-5);
+      f.targetY = CURSOR.y + (f.uid.charCodeAt(3)%8-4);
+    } else if(f.aiState === 'seekFood' || f.aiState === 'follow'){
+      // 목표가 사라졌으면 idle 복귀
       const stillThere = STATE.food.find(fd=>fd.uid===f.foodTarget && !fd.eaten);
-      if(!stillThere){ f.aiState='idle'; f.foodTarget=null; }
+      if(!stillThere){ f.aiState='idle'; f.foodTarget=null; f.aiTimer = 0; }
     }
 
-    // 배회/탐험/추적 행동 (먹이 추적 중이 아닐 때)
-    if(f.aiState !== 'seekFood' && f.aiTimer <= 0){
+    // 배회/탐험/추적 행동 (먹이·커서 추적 중이 아닐 때)
+    if(f.aiState !== 'seekFood' && f.aiState !== 'follow' && f.aiTimer <= 0){
       const curio = (f.curiosity||50)/100;
       const aggr = (f.aggression||30)/100;
       const roll = Math.random();
@@ -2099,14 +2563,14 @@ function animateFishPositions(dt){
     // ----- 이동 -----
     const dx = f.targetX - f.x, dy = f.targetY - f.y;
     const dist = Math.sqrt(dx*dx+dy*dy);
-    // 먹이 추적 시 더 빠르게 (지능 보정)
-    let speed = f.swimSpeed * (f.aiState==='seekFood' ? (1.8 + intel*1.2) : 1);
+    // 먹이 추적 시 더 빠르게 (지능 보정), 커서 따라올 때도 민첩하게
+    let speed = f.swimSpeed * (f.aiState==='seekFood' ? (1.8 + intel*1.2) : (f.aiState==='follow' ? 2.2 : 1));
     if(dist < 1.2){
       if(f.aiState==='seekFood' && f.foodTarget){
         const food = STATE.food.find(fd=>fd.uid===f.foodTarget && !fd.eaten);
         if(food){ fishEatFood(f, food); }
       }
-      if(f.aiState!=='seekFood'){ f.aiTimer = Math.min(f.aiTimer, 200); }
+      if(f.aiState!=='seekFood' && f.aiState!=='follow'){ f.aiTimer = Math.min(f.aiTimer, 200); }
     } else {
       f.x += (dx/dist) * speed * (dt/16);
       f.y += (dy/dist) * speed * (dt/16) * 0.7;
@@ -2268,6 +2732,7 @@ function showEvolutionOverlay(oldEmoji, newEmoji, newName){
 function triggerLevelUpEffect(f){
   spawnFloatingText(f, 'LEVEL UP!', 'var(--accent-gold)');
   spawnSparkles(f);
+  if(typeof Aquarium3D !== 'undefined' && Aquarium3D.isEnabled()) Aquarium3D.burst(f.x, f.y, 0xffce54);
   const el = document.getElementById('sprite_'+f.uid);
   if(el){
     el.classList.remove('levelup-pulse');
@@ -2801,6 +3266,7 @@ function renderTank(){
   else if(['moon_sea','jupiter_sea','saturn_sea','deep_space_frontier'].includes(region.id)) bgLayer.classList.add('region-space');
 
   updateSpaceDecor(region.id);
+  if(typeof Aquarium3D !== 'undefined' && Aquarium3D.isEnabled()) Aquarium3D.setRegion(region.id);
 
   const layer = document.getElementById('fishLayer');
   const existingUids = new Set(STATE.fish.map(f=>f.uid));
@@ -2908,6 +3374,8 @@ function openFishDetail(uid){
     <div class="detail-stat"><span>배고픔</span><span class="v">${Math.round(f.hunger||0)} / 100</span></div>
     <div class="detail-stat"><span>행복도</span><span class="v">${Math.round(f.happiness)} / 100</span></div>
     <div class="detail-stat"><span>진화 게이지</span><span class="v">${evoPct}% ${f.canEvolve()?'(진화 준비)':''}</span></div>
+    <div class="detail-stat"><span>친밀도</span><span class="v">${f.friendTier.emoji} ${f.friendTier.name} (${Math.round(f.friendship||0)}/100)</span></div>
+    <div class="detail-stat"><span>친밀도 버프</span><span class="v" style="font-size:11px;text-align:right;color:var(--accent-gold);">${f.friendTier.buffDesc}</span></div>
     <div class="detail-stat"><span>판매가</span><span class="v">🪙${f.sellPrice()}</span></div>
     <div class="detail-stat"><span>초당 수익</span><span class="v">🪙${f.incomePerSecond().toFixed(2)}</span></div>
     <div class="detail-stat"><span>성격 효과</span><span class="v" style="font-size:11px;text-align:right;">${f.pers.desc}</span></div>
@@ -3459,6 +3927,17 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const yPct = ((e.clientY - rect.top)/rect.height)*100;
       dropFoodAt(Math.max(3,Math.min(97,xPct)), Math.max(3,Math.min(60,yPct)), false);
     });
+    // 커서 추적 (친밀도 100 물고기가 따라다님)
+    const trackCursor = (clientX, clientY)=>{
+      const rect = canvas.getBoundingClientRect();
+      CURSOR.x = ((clientX - rect.left)/rect.width)*100;
+      CURSOR.y = ((clientY - rect.top)/rect.height)*100;
+      CURSOR.active = CURSOR.x>=0 && CURSOR.x<=100 && CURSOR.y>=0 && CURSOR.y<=100;
+      CURSOR.lastMove = Date.now();
+    };
+    canvas.addEventListener('mousemove', (e)=>trackCursor(e.clientX, e.clientY));
+    canvas.addEventListener('touchmove', (e)=>{ if(e.touches[0]) trackCursor(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
+    canvas.addEventListener('mouseleave', ()=>{ CURSOR.active=false; });
   }
   document.getElementById('btnShopShortcut').onclick = ()=>openModal('shop');
   document.getElementById('btnSettings').onclick = ()=>openModal('settings');
