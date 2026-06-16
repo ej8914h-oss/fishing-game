@@ -1,0 +1,2908 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>진화하는 우주 수족관 — Cosmic Aquarium Evolution</title>
+<style>
+/* ============================================================
+   CSS 변수: 디자인 토큰
+   ============================================================ */
+:root{
+  --bg-void:#060812;
+  --bg-deep:#0b0f1f;
+  --bg-panel:#11162a;
+  --bg-panel-2:#161c33;
+  --line:#262d4a;
+  --line-soft:#1b2140;
+  --text-hi:#eef1ff;
+  --text-mid:#9aa3c7;
+  --text-low:#5d6690;
+  --accent-cyan:#4fd8ff;
+  --accent-violet:#9b6bff;
+  --accent-gold:#ffce54;
+  --accent-rose:#ff6b9d;
+  --accent-green:#5dffb0;
+  --danger:#ff5c6c;
+
+  --grade-normal:#9aa3c7;
+  --grade-advanced:#5dffb0;
+  --grade-rare:#4fd8ff;
+  --grade-epic:#9b6bff;
+  --grade-legend:#ffce54;
+  --grade-myth:#ff6b9d;
+  --grade-cosmic:#7ce8ff;
+  --grade-trans:#ffffff;
+  --grade-god:#ffd9f3;
+
+  --font-display:'Orbitron', 'Trebuchet MS', sans-serif;
+  --font-body:'Segoe UI', 'Pretendard', -apple-system, sans-serif;
+  --font-mono:'Consolas', monospace;
+
+  --radius-s:6px;
+  --radius-m:12px;
+  --radius-l:20px;
+}
+
+@font-face{
+  font-family:'Orbitron';
+  src:local('Arial');
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html,body{
+  width:100%;height:100%;
+  background:var(--bg-void);
+  color:var(--text-hi);
+  font-family:var(--font-body);
+  overflow:hidden;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+#app{
+  position:relative;
+  width:100vw;height:100vh;
+  display:flex;
+  flex-direction:column;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(79,216,255,0.06), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(155,107,255,0.08), transparent 50%),
+    var(--bg-void);
+}
+
+/* 별 배경 */
+#starfield{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  z-index:0;pointer-events:none;
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, white, transparent),
+    radial-gradient(1px 1px at 90px 80px, white, transparent),
+    radial-gradient(1px 1px at 150px 20px, white, transparent),
+    radial-gradient(2px 2px at 200px 150px, white, transparent),
+    radial-gradient(1px 1px at 280px 60px, white, transparent),
+    radial-gradient(1px 1px at 340px 200px, white, transparent);
+  background-repeat:repeat;
+  background-size:400px 250px;
+  opacity:0.35;
+  animation:starDrift 120s linear infinite;
+}
+@keyframes starDrift{
+  from{background-position:0 0;}
+  to{background-position:-400px 250px;}
+}
+
+/* ============================================================
+   상단 헤더 / 자원 패널
+   ============================================================ */
+#header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;
+  background:linear-gradient(180deg, rgba(17,22,42,0.95), rgba(17,22,42,0.7));
+  border-bottom:1px solid var(--line);
+  z-index:5;
+  flex-shrink:0;
+  gap:10px;
+}
+#header .title{
+  font-family:var(--font-display);
+  font-size:14px;
+  letter-spacing:1px;
+  color:var(--accent-cyan);
+  white-space:nowrap;
+  text-shadow:0 0 12px rgba(79,216,255,0.5);
+}
+
+/* 메인 퀘스트 배너 */
+#mainQuestBanner{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 16px;
+  background:linear-gradient(90deg, rgba(255,206,84,0.12), rgba(155,107,255,0.08));
+  border-bottom:1px solid var(--line);
+  z-index:4;flex-shrink:0;
+}
+#mainQuestBanner .mq-ic{font-size:20px;flex-shrink:0;}
+#mainQuestBanner .mq-text{min-width:0;}
+#mainQuestBanner .mq-title{font-size:12.5px;font-weight:700;color:var(--accent-gold);}
+#mainQuestBanner .mq-desc{font-size:11px;color:var(--text-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+#resourceBar{
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;
+}
+.res-chip{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:5px 12px;
+  font-size:12.5px;
+  font-family:var(--font-mono);
+  white-space:nowrap;
+}
+.res-chip .ic{font-size:14px;}
+.res-chip .val{color:var(--text-hi);font-weight:600;}
+.res-chip.coin{border-color:rgba(255,206,84,0.4);}
+.res-chip.coin .val{color:var(--accent-gold);}
+.res-chip.stone{border-color:rgba(155,107,255,0.4);}
+.res-chip.stone .val{color:var(--accent-violet);}
+.res-chip.gene{border-color:rgba(79,216,255,0.4);}
+.res-chip.gene .val{color:var(--accent-cyan);}
+
+/* ============================================================
+   메인 레이아웃
+   ============================================================ */
+#main{
+  flex:1;
+  display:grid;
+  grid-template-columns:230px 1fr 280px;
+  gap:10px;
+  padding:10px;
+  overflow:hidden;
+  z-index:2;
+  min-height:0;
+}
+
+.panel{
+  background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+  border:1px solid var(--line);
+  border-radius:var(--radius-m);
+  display:flex;flex-direction:column;
+  min-height:0;
+  overflow:hidden;
+}
+.panel-head{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line-soft);
+  font-size:12px;
+  letter-spacing:0.5px;
+  color:var(--text-mid);
+  text-transform:uppercase;
+  font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-body{
+  flex:1;overflow-y:auto;padding:10px;
+}
+.panel-body::-webkit-scrollbar{width:6px;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+
+/* 좌측: 자원/지역/연구 패널 */
+#leftPanel .stat-row{
+  display:flex;justify-content:space-between;
+  font-size:12.5px;color:var(--text-mid);
+  padding:5px 0;border-bottom:1px dashed var(--line-soft);
+}
+#leftPanel .stat-row .v{color:var(--text-hi);font-weight:600;}
+.section-label{
+  font-size:11px;color:var(--accent-cyan);margin:12px 0 6px;
+  text-transform:uppercase;letter-spacing:0.5px;
+  border-left:2px solid var(--accent-cyan);padding-left:6px;
+}
+.region-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 8px;margin-bottom:5px;border-radius:var(--radius-s);
+  background:rgba(255,255,255,0.02);
+  font-size:12px;cursor:pointer;border:1px solid transparent;
+  transition:background .15s;
+}
+.region-item:hover{background:rgba(79,216,255,0.07);border-color:var(--line);}
+.region-item.locked{opacity:0.4;cursor:not-allowed;}
+.region-item.active{border-color:var(--accent-cyan);background:rgba(79,216,255,0.1);}
+.region-item .rname{display:flex;align-items:center;gap:6px;}
+.region-item .rcost{color:var(--accent-gold);font-family:var(--font-mono);font-size:11px;}
+
+/* 중앙: 수족관 */
+#tankPanel{
+  position:relative;
+}
+#tankWrap{
+  position:relative;flex:1;
+  overflow:hidden;
+  border-radius:0 0 var(--radius-m) var(--radius-m);
+}
+#tankCanvasArea{
+  position:absolute;inset:0;
+  overflow:hidden;
+}
+.tank-bg-layer{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg, #0d2b4a 0%, #07182e 45%, #030a17 100%);
+  transition:background 0.8s;
+}
+.tank-bg-layer.region-deep{background:linear-gradient(180deg, #051226 0%, #020611 60%, #000308 100%);}
+.tank-bg-layer.region-volcano{background:linear-gradient(180deg, #2a0e0a 0%, #1a0705 60%, #0a0302 100%);}
+.tank-bg-layer.region-glacier{background:linear-gradient(180deg, #103040 0%, #0a1e2c 60%, #04101a 100%);}
+.tank-bg-layer.region-space{background:linear-gradient(180deg, #0a0a1f 0%, #05051a 60%, #000010 100%);}
+
+.light-ray{
+  position:absolute;top:-10%;width:80px;height:140%;
+  background:linear-gradient(180deg, rgba(255,255,255,0.10), transparent 80%);
+  transform:rotate(8deg);
+  filter:blur(6px);
+  animation:rayFloat 9s ease-in-out infinite;
+}
+@keyframes rayFloat{0%,100%{opacity:0.4;}50%{opacity:0.8;}}
+
+.bubble{
+  position:absolute;bottom:-20px;
+  width:8px;height:8px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.1));
+  animation:bubbleRise linear infinite;
+  pointer-events:none;
+}
+@keyframes bubbleRise{
+  0%{transform:translateY(0) translateX(0);opacity:0.8;}
+  100%{transform:translateY(-120vh) translateX(20px);opacity:0;}
+}
+
+.wave-overlay{
+  position:absolute;top:0;left:0;width:200%;height:40px;
+  background:repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 40px, transparent 40px 80px);
+  animation:waveMove 6s linear infinite;
+  opacity:0.5;
+}
+@keyframes waveMove{from{transform:translateX(0);}to{transform:translateX(-80px);}}
+
+/* 우주 테마 강화: 행성/성운/우주선/블랙홀 배경 장식 */
+.deco-planet{
+  position:absolute;top:8%;right:8%;width:70px;height:70px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #c9d6ff, #6b7fd6 55%, #2a3470 100%);
+  box-shadow:0 0 30px rgba(120,150,255,0.4), inset -10px -10px 20px rgba(0,0,0,0.4);
+  display:none;animation:planetDrift 18s ease-in-out infinite;pointer-events:none;z-index:1;
+}
+.deco-planet.planet-mars{background:radial-gradient(circle at 35% 30%, #ffae8a, #c1502f 55%, #5e1f0d 100%);box-shadow:0 0 30px rgba(255,120,70,0.4), inset -10px -10px 20px rgba(0,0,0,0.4);}
+.deco-planet.planet-jupiter{background:radial-gradient(circle at 35% 30%, #ffe9c2, #c98b4a 40%, #8a5a26 70%, #4a2e10 100%);box-shadow:0 0 30px rgba(255,200,120,0.35), inset -10px -10px 20px rgba(0,0,0,0.4);}
+.deco-planet.planet-saturn{background:radial-gradient(circle at 35% 30%, #fff3d6, #d8b878 55%, #7a5e2c 100%);box-shadow:0 0 30px rgba(255,220,150,0.35), inset -10px -10px 20px rgba(0,0,0,0.4);}
+.deco-planet.planet-saturn::after{
+  content:'';position:absolute;top:50%;left:-25%;width:150%;height:14px;
+  border:2px solid rgba(255,240,200,0.55);border-radius:50%;
+  transform:translateY(-50%) rotate(-12deg);
+}
+@keyframes planetDrift{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+
+.deco-nebula{
+  position:absolute;top:30%;left:5%;width:220px;height:140px;
+  background:radial-gradient(ellipse at 30% 40%, rgba(155,107,255,0.22), transparent 60%),
+             radial-gradient(ellipse at 70% 60%, rgba(79,216,255,0.18), transparent 60%);
+  filter:blur(8px);display:none;pointer-events:none;z-index:0;
+  animation:nebulaPulse 12s ease-in-out infinite;
+}
+@keyframes nebulaPulse{0%,100%{opacity:0.6;}50%{opacity:1;}}
+
+.deco-ship{
+  position:absolute;top:18%;left:-40px;font-size:22px;display:none;pointer-events:none;z-index:2;
+  filter:drop-shadow(0 0 6px rgba(79,216,255,0.6));
+  animation:shipFly 22s linear infinite;
+}
+@keyframes shipFly{
+  0%{transform:translateX(0) translateY(0) rotate(8deg);}
+  100%{transform:translateX(calc(100vw)) translateY(40px) rotate(8deg);}
+}
+
+.deco-blackhole{
+  position:absolute;bottom:6%;right:10%;width:90px;height:90px;border-radius:50%;
+  background:radial-gradient(circle, #000 35%, rgba(80,40,140,0.6) 60%, transparent 80%);
+  box-shadow:0 0 40px 14px rgba(120,60,200,0.35);
+  display:none;pointer-events:none;z-index:1;
+  animation:blackholeSpin 6s linear infinite;
+}
+@keyframes blackholeSpin{0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(40deg);}}
+
+
+.fish-sprite{
+  position:absolute;
+  cursor:pointer;
+  transition:filter .2s;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+  will-change:transform;
+}
+.fish-sprite:hover{filter:drop-shadow(0 0 10px currentColor) brightness(1.2);}
+.fish-sprite.flip{transform:scaleX(-1);}
+.fish-sprite .body-emoji{
+  font-size:32px;
+  display:block;
+  filter:drop-shadow(0 0 4px rgba(0,0,0,0.5));
+}
+.fish-sprite .grade-glow{
+  position:absolute;inset:-8px;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:0.5;
+}
+.fish-sprite.glow-strong .grade-glow{
+  box-shadow:0 0 18px 6px currentColor;
+  animation:pulseGlow 2s ease-in-out infinite;
+}
+@keyframes pulseGlow{0%,100%{opacity:0.3;}50%{opacity:0.7;}}
+.fish-sprite.levelup-pulse{animation:levelupPulse 0.85s ease-out;}
+@keyframes levelupPulse{
+  0%{transform:scale(1);}
+  30%{transform:scale(1.35);filter:drop-shadow(0 0 16px var(--accent-gold)) brightness(1.4);}
+  100%{transform:scale(1);}
+}
+
+.sparkle{
+  position:absolute;width:4px;height:4px;background:#fff;border-radius:50%;
+  animation:sparkleAnim 1.2s ease-out forwards;pointer-events:none;
+}
+@keyframes sparkleAnim{
+  0%{opacity:1;transform:scale(0) translateY(0);}
+  100%{opacity:0;transform:scale(1.4) translateY(-30px);}
+}
+
+.feed-particle{
+  position:absolute;width:6px;height:6px;border-radius:50%;
+  background:var(--accent-gold);
+  box-shadow:0 0 6px var(--accent-gold);
+  animation:feedFall 1.4s ease-in forwards;
+  pointer-events:none;
+}
+@keyframes feedFall{
+  0%{transform:translateY(0);opacity:1;}
+  100%{transform:translateY(220px);opacity:0;}
+}
+
+.floating-text{
+  position:absolute;
+  font-size:13px;font-weight:700;
+  font-family:var(--font-mono);
+  pointer-events:none;
+  animation:floatUp 1.1s ease-out forwards;
+  text-shadow:0 1px 3px rgba(0,0,0,0.6);
+  z-index:20;
+}
+@keyframes floatUp{
+  0%{opacity:1;transform:translateY(0);}
+  100%{opacity:0;transform:translateY(-50px);}
+}
+
+.evo-burst{
+  position:absolute;width:10px;height:10px;border-radius:50%;
+  pointer-events:none;
+  animation:evoBurstAnim 0.8s ease-out forwards;
+}
+@keyframes evoBurstAnim{
+  0%{transform:translate(0,0) scale(0.5);opacity:1;}
+  100%{transform:translate(var(--dx),var(--dy)) scale(1.6);opacity:0;}
+}
+
+#tankToolbar{
+  position:absolute;bottom:10px;left:10px;right:10px;
+  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
+  z-index:10;
+}
+#tankInfoTop{
+  position:absolute;top:10px;left:10px;right:10px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  z-index:10;pointer-events:none;
+  font-size:11.5px;color:var(--text-mid);
+  font-family:var(--font-mono);
+}
+#tankInfoTop .badge{
+  background:rgba(6,8,18,0.6);
+  border:1px solid var(--line);
+  padding:4px 10px;border-radius:999px;
+  pointer-events:auto;
+}
+
+.btn{
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  color:var(--text-hi);
+  padding:9px 16px;
+  border-radius:var(--radius-s);
+  font-size:12.5px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .15s;
+  font-family:var(--font-body);
+}
+.btn:hover{border-color:var(--accent-cyan);background:rgba(79,216,255,0.1);}
+.btn:active{transform:scale(0.97);}
+.btn.primary{background:linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));border:none;color:#04060c;}
+.btn.primary:hover{filter:brightness(1.1);}
+.btn.gold{background:linear-gradient(135deg, var(--accent-gold), #ff9a3d);border:none;color:#1a0e00;}
+.btn.danger{border-color:var(--danger);color:var(--danger);}
+.btn.danger:hover{background:rgba(255,92,108,0.1);}
+.btn:disabled{opacity:0.35;cursor:not-allowed;filter:none;}
+.btn.small{padding:5px 10px;font-size:11px;}
+.btn.full{width:100%;}
+
+/* 우측: 물고기 정보 / 선택 */
+#rightPanel .empty-hint{
+  color:var(--text-low);font-size:12px;text-align:center;padding:30px 10px;
+}
+.fish-card{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  border-radius:var(--radius-m);
+  padding:10px;margin-bottom:8px;
+  cursor:pointer;
+  transition:border-color .15s, background .15s;
+  position:relative;
+}
+.fish-card:hover{border-color:var(--accent-cyan);}
+.fish-card.selected{border-color:var(--accent-violet);background:rgba(155,107,255,0.08);}
+.fish-card .fc-top{display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.fish-card .fc-name{font-weight:700;font-size:13px;}
+.fish-card .fc-grade{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;}
+.fish-card .fc-meta{display:flex;gap:8px;font-size:11px;color:var(--text-mid);margin-top:4px;}
+.fish-card .fc-bar-wrap{margin-top:6px;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+.fish-card .fc-bar{height:100%;background:linear-gradient(90deg, var(--accent-cyan), var(--accent-violet));border-radius:3px;transition:width .3s;}
+.fish-card .fc-happy{font-size:10px;color:var(--text-low);margin-top:3px;}
+
+#detailPanelBody{font-size:12.5px;}
+.detail-name{font-size:17px;font-weight:800;margin-bottom:2px;}
+.detail-grade-tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:999px;font-weight:700;margin-bottom:10px;margin-right:6px;}
+.detail-pers-tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:999px;font-weight:700;margin-bottom:10px;background:rgba(255,255,255,0.06);border:1px solid var(--line);color:var(--text-mid);}
+.detail-stat{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--line-soft);}
+.detail-stat .v{font-weight:700;color:var(--text-hi);}
+.detail-skill{
+  margin-top:8px;background:rgba(79,216,255,0.06);
+  border:1px solid rgba(79,216,255,0.2);
+  border-radius:var(--radius-s);padding:7px 9px;font-size:11.5px;
+}
+.detail-actions{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+
+/* ============================================================
+   하단 탭 메뉴 (상점/탐사/도감/연구소/퀘스트/업적)
+   ============================================================ */
+#bottomNav{
+  display:flex;gap:6px;padding:8px 12px;
+  background:var(--bg-panel);
+  border-top:1px solid var(--line);
+  z-index:5;flex-shrink:0;
+  overflow-x:auto;
+}
+.nav-btn{
+  flex:1;min-width:80px;
+  background:transparent;
+  border:1px solid transparent;
+  color:var(--text-mid);
+  padding:8px 6px;
+  border-radius:var(--radius-s);
+  font-size:11.5px;font-weight:700;
+  cursor:pointer;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.nav-btn .nav-ic{font-size:17px;}
+.nav-btn:hover{background:rgba(255,255,255,0.04);color:var(--text-hi);}
+.nav-btn.active{background:rgba(79,216,255,0.12);color:var(--accent-cyan);border-color:rgba(79,216,255,0.3);}
+.nav-btn .nav-dot{
+  position:absolute;top:4px;right:14px;
+  width:7px;height:7px;border-radius:50%;background:var(--danger);
+  display:none;
+}
+.nav-btn{position:relative;}
+
+/* ============================================================
+   모달 (오버레이 화면: 상점/탐사/도감/연구소/퀘스트/업적/설정)
+   ============================================================ */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(3,4,10,0.75);
+  backdrop-filter:blur(3px);
+  display:none;
+  align-items:center;justify-content:center;
+  z-index:100;
+  padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:linear-gradient(180deg, var(--bg-panel), var(--bg-deep));
+  border:1px solid var(--line);
+  border-radius:var(--radius-l);
+  width:100%;max-width:760px;
+  max-height:85vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+.modal-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 20px;border-bottom:1px solid var(--line-soft);
+}
+.modal-head h2{font-size:16px;font-family:var(--font-display);color:var(--accent-cyan);letter-spacing:0.5px;}
+.modal-close{
+  background:none;border:none;color:var(--text-mid);font-size:20px;cursor:pointer;
+  width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+}
+.modal-close:hover{background:rgba(255,255,255,0.08);color:var(--text-hi);}
+.modal-body{flex:1;overflow-y:auto;padding:18px 20px;}
+.modal-body::-webkit-scrollbar{width:6px;}
+.modal-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+
+.tab-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.tab-chip{
+  padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;
+  background:rgba(255,255,255,0.04);border:1px solid var(--line);
+  cursor:pointer;color:var(--text-mid);
+}
+.tab-chip.active{background:rgba(79,216,255,0.15);color:var(--accent-cyan);border-color:var(--accent-cyan);}
+
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill, minmax(150px,1fr));gap:10px;}
+
+.shop-item{
+  background:rgba(255,255,255,0.03);border:1px solid var(--line);
+  border-radius:var(--radius-m);padding:12px;display:flex;flex-direction:column;gap:6px;
+}
+.shop-item .si-name{font-weight:700;font-size:13px;}
+.shop-item .si-desc{font-size:11px;color:var(--text-mid);min-height:30px;}
+.shop-item .si-price{font-size:12px;color:var(--accent-gold);font-family:var(--font-mono);}
+
+.region-card{
+  background:rgba(255,255,255,0.03);border:1px solid var(--line);
+  border-radius:var(--radius-m);padding:14px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.region-card.locked{opacity:0.5;}
+.region-card .rc-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;}
+.region-card .rc-desc{font-size:11.5px;color:var(--text-mid);margin-top:3px;}
+.region-card .rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+
+.dex-item{
+  aspect-ratio:1;background:rgba(255,255,255,0.03);border:1px solid var(--line);
+  border-radius:var(--radius-m);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:11px;gap:4px;padding:8px;text-align:center;cursor:pointer;
+}
+.dex-item .dex-emoji{font-size:26px;}
+.dex-item.locked{filter:brightness(0.15);}
+.dex-item.locked .dex-emoji{filter:blur(1px);}
+
+.quest-item, .achievement-item{
+  background:rgba(255,255,255,0.03);border:1px solid var(--line);
+  border-radius:var(--radius-m);padding:12px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
+.quest-item.done, .achievement-item.done{border-color:var(--accent-green);background:rgba(93,255,176,0.06);}
+.qi-name{font-weight:700;font-size:13px;}
+.qi-desc{font-size:11.5px;color:var(--text-mid);margin-top:2px;}
+.qi-progress{font-size:11px;color:var(--accent-cyan);margin-top:4px;font-family:var(--font-mono);}
+
+.research-item{
+  background:rgba(255,255,255,0.03);border:1px solid var(--line);
+  border-radius:var(--radius-m);padding:12px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.research-item.active-auto{border-color:var(--accent-green);}
+
+.gene-lab-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:16px;}
+.gene-slot{
+  background:rgba(255,255,255,0.03);border:2px dashed var(--line);
+  border-radius:var(--radius-m);min-height:90px;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
+  cursor:pointer;font-size:12px;color:var(--text-mid);text-align:center;padding:8px;
+}
+.gene-slot.filled{border-style:solid;border-color:var(--accent-violet);color:var(--text-hi);}
+.gene-slot .gs-emoji{font-size:28px;}
+
+.toast-wrap{
+  position:fixed;top:60px;right:16px;z-index:200;
+  display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;
+}
+.toast{
+  background:var(--bg-panel-2);border:1px solid var(--accent-cyan);
+  border-radius:var(--radius-s);padding:10px 16px;
+  font-size:12.5px;min-width:200px;max-width:320px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.4);
+  animation:toastIn .3s ease, toastOut .3s ease 3.2s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateX(30px);}}
+.toast.evo{border-color:var(--accent-gold);}
+.toast.discover{border-color:var(--accent-violet);}
+.toast.warn{border-color:var(--danger);}
+
+/* 진화 전체화면 효과 */
+#evolutionOverlay{
+  position:fixed;inset:0;z-index:300;
+  display:none;align-items:center;justify-content:center;
+  background:radial-gradient(circle, rgba(79,216,255,0.15), rgba(3,4,10,0.92));
+}
+#evolutionOverlay.show{display:flex;animation:evoFadeIn .4s;}
+@keyframes evoFadeIn{from{opacity:0;}to{opacity:1;}}
+.evo-content{text-align:center;}
+.evo-content .evo-old, .evo-content .evo-new{font-size:64px;display:inline-block;}
+.evo-content .evo-arrow{font-size:30px;margin:0 20px;color:var(--accent-gold);animation:arrowPulse 1s infinite;}
+@keyframes arrowPulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
+.evo-content .evo-title{font-family:var(--font-display);font-size:13px;color:var(--accent-cyan);letter-spacing:2px;margin-bottom:20px;}
+.evo-content .evo-name-new{font-size:22px;font-weight:800;margin-top:16px;color:var(--accent-gold);text-shadow:0 0 20px rgba(255,206,84,0.6);}
+.evo-content .evo-new{animation:evoNewPop .6s ease .3s;}
+@keyframes evoNewPop{0%{transform:scale(0.3);opacity:0;}70%{transform:scale(1.2);}100%{transform:scale(1);opacity:1;}}
+
+/* 희귀 물고기 등장 전체화면 효과 */
+#rareAppearOverlay{
+  position:fixed;inset:0;z-index:310;
+  display:none;align-items:center;justify-content:center;
+  background:radial-gradient(circle, rgba(168,123,255,0.18), rgba(3,4,10,0.94));
+}
+#rareAppearOverlay.show{display:flex;animation:rareFadeIn .4s;}
+@keyframes rareFadeIn{from{opacity:0;}to{opacity:1;}}
+.rare-content{text-align:center;}
+.rare-content .rare-title{font-family:var(--font-display);font-size:13px;color:var(--accent-violet);letter-spacing:3px;margin-bottom:18px;animation:rareTitlePulse 1.2s infinite;}
+@keyframes rareTitlePulse{0%,100%{opacity:0.55;}50%{opacity:1;}}
+.rare-content .rare-emoji{font-size:88px;display:inline-block;animation:rareEmojiPop .7s ease, rareEmojiGlow 1.6s ease-in-out infinite .7s;filter:drop-shadow(0 0 24px rgba(168,123,255,0.85));}
+@keyframes rareEmojiPop{0%{transform:scale(0.2) rotate(-15deg);opacity:0;}60%{transform:scale(1.25) rotate(8deg);}100%{transform:scale(1) rotate(0);opacity:1;}}
+@keyframes rareEmojiGlow{0%,100%{filter:drop-shadow(0 0 18px rgba(168,123,255,0.7));}50%{filter:drop-shadow(0 0 36px rgba(255,206,84,0.9));}}
+.rare-content .rare-name{font-size:23px;font-weight:800;margin-top:18px;color:#fff;text-shadow:0 0 18px rgba(168,123,255,0.7);}
+.rare-content .rare-grade{margin-top:8px;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--accent-gold);}
+
+/* 반응형: 모바일 */
+@media (max-width: 880px){
+  #main{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;}
+  #leftPanel, #rightPanel{max-height:160px;}
+  #header .title{font-size:11px;}
+  .res-chip{font-size:11px;padding:4px 9px;}
+  #bottomNav{flex-wrap:nowrap;}
+  .nav-btn{min-width:64px;font-size:10px;}
+  .modal-box{max-height:92vh;}
+}
+@media (max-width:880px){
+  #tankPanel{order:0;}
+}
+.locked-overlay-icon{font-size:13px;}
+
+/* 접근성: 포커스 표시 */
+button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
+  outline:2px solid var(--accent-cyan);outline-offset:2px;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important;animation-iteration-count:1 !important;}
+}
+</style>
+</head>
+<body>
+<div id="starfield"></div>
+<div id="app">
+
+  <!-- 헤더 -->
+  <div id="header">
+    <div class="title">🌌 COSMIC AQUARIUM EVOLUTION</div>
+    <div id="resourceBar">
+      <div class="res-chip coin"><span class="ic">🪙</span><span class="val" id="resCoin">0</span></div>
+      <div class="res-chip stone"><span class="ic">💎</span><span class="val" id="resEvoStone">0</span></div>
+      <div class="res-chip gene"><span class="ic">🧬</span><span class="val" id="resGene">0</span></div>
+      <button class="btn small" id="btnSettings">⚙</button>
+    </div>
+  </div>
+
+  <!-- 메인 퀘스트 배너: 항상 다음 목표 표시 -->
+  <div id="mainQuestBanner"></div>
+
+  <!-- 메인 -->
+  <div id="main">
+
+    <!-- 좌측 패널 -->
+    <div class="panel" id="leftPanel">
+      <div class="panel-head"><span>📊 수족관 현황</span></div>
+      <div class="panel-body">
+        <div class="stat-row"><span>수족관 인구</span><span class="v" id="statPop">1 / 10</span></div>
+        <div class="stat-row"><span>현재 지역</span><span class="v" id="statRegion">초보 바다</span></div>
+        <div class="stat-row"><span>분당 수익</span><span class="v" id="statIncome">0 🪙</span></div>
+        <div class="stat-row"><span>도감 달성률</span><span class="v" id="statDex">0 / 18</span></div>
+
+        <div class="section-label">🗺 지역 바로가기</div>
+        <div id="regionQuickList"></div>
+
+        <div class="section-label">🤖 자동화 상태</div>
+        <div id="autoStatusList" style="font-size:11.5px;color:var(--text-low);">아직 해금된 자동화가 없습니다.</div>
+
+        <div class="section-label">🥚 알 보관함</div>
+        <div id="eggStatusList" style="font-size:11.5px;color:var(--text-low);">보관 중인 알이 없습니다.</div>
+      </div>
+    </div>
+
+    <!-- 중앙: 수족관 -->
+    <div class="panel" id="tankPanel">
+      <div class="panel-head">
+        <span>🐠 수족관</span>
+        <span style="font-size:11px;color:var(--text-low);" id="tankRegionLabel">초보 바다</span>
+      </div>
+      <div id="tankWrap">
+        <div id="tankCanvasArea">
+          <div class="tank-bg-layer" id="tankBgLayer"></div>
+          <div id="fishLayer"></div>
+          <div id="fxLayer"></div>
+        </div>
+        <div id="tankInfoTop">
+          <div class="badge">먹이 통: <span id="feedStock">0</span>개</div>
+          <div class="badge" id="incomeRateBadge">⚡ 초당 🪙0</div>
+          <div class="badge">탭하여 먹이주기 🍤</div>
+        </div>
+        <div id="tankToolbar">
+          <button class="btn primary" id="btnFeedAll">🍤 모두에게 먹이주기</button>
+          <button class="btn" id="btnExploreShortcut">🚀 탐사하기</button>
+          <button class="btn gold" id="btnShopShortcut">🛒 상점</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 우측 패널 -->
+    <div class="panel" id="rightPanel">
+      <div class="panel-head"><span id="rightPanelTitle">🐟 보유 물고기</span></div>
+      <div class="panel-body" id="fishListBody">
+        <!-- 동적 생성 -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 하단 네비게이션 -->
+  <div id="bottomNav">
+    <button class="nav-btn" data-modal="shop"><span class="nav-ic">🛒</span>상점</button>
+    <button class="nav-btn" data-modal="explore"><span class="nav-ic">🚀</span>탐사</button>
+    <button class="nav-btn" data-modal="egg"><span class="nav-ic">🥚</span>알<span class="nav-dot" id="eggDot"></span></button>
+    <button class="nav-btn" data-modal="genelab"><span class="nav-ic">🧪</span>연구소</button>
+    <button class="nav-btn" data-modal="planet"><span class="nav-ic">🪐</span>개척</button>
+    <button class="nav-btn" data-modal="dex"><span class="nav-ic">📖</span>도감</button>
+    <button class="nav-btn" data-modal="quest"><span class="nav-ic">📋</span>퀘스트<span class="nav-dot" id="questDot"></span></button>
+    <button class="nav-btn" data-modal="achievement"><span class="nav-ic">🏆</span>업적<span class="nav-dot" id="achDot"></span></button>
+  </div>
+
+</div>
+
+<!-- 토스트 알림 -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- 진화 풀스크린 오버레이 -->
+<div id="evolutionOverlay">
+  <div class="evo-content">
+    <div class="evo-title">✦ 진화 발생 ✦</div>
+    <div>
+      <span class="evo-old" id="evoOldEmoji">🐟</span>
+      <span class="evo-arrow">➜</span>
+      <span class="evo-new" id="evoNewEmoji">🐠</span>
+    </div>
+    <div class="evo-name-new" id="evoNewName">???</div>
+  </div>
+</div>
+
+<!-- 모달: 알 보관함 -->
+<div class="modal-overlay" id="modal-egg">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🥚 알 보관함</h2><button class="modal-close" data-close="egg">✕</button></div>
+    <div class="modal-body" id="eggContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 행성 개척 -->
+<div class="modal-overlay" id="modal-planet">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🪐 행성 개척</h2><button class="modal-close" data-close="planet">✕</button></div>
+    <div class="modal-body" id="planetContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 오프라인 보상 -->
+<div class="modal-overlay" id="modal-offline">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-head"><h2>🌙 오프라인 보상</h2><button class="modal-close" data-close="offline">✕</button></div>
+    <div class="modal-body" id="offlineModalBody"></div>
+  </div>
+</div>
+
+<!-- 희귀 물고기 등장 풀스크린 효과 -->
+<div id="rareAppearOverlay">
+  <div class="rare-content">
+    <div class="rare-title">✦ 희귀 발견 ✦</div>
+    <div class="rare-emoji" id="rareAppearEmoji">🐠</div>
+    <div class="rare-name" id="rareAppearName">???</div>
+    <div class="rare-grade" id="rareAppearGrade">등급</div>
+  </div>
+</div>
+
+<!-- 모달: 상점 -->
+<div class="modal-overlay" id="modal-shop">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🛒 상점</h2><button class="modal-close" data-close="shop">✕</button></div>
+    <div class="modal-body">
+      <div class="tab-row" id="shopTabs">
+        <div class="tab-chip active" data-shoptab="fish">물고기 구매</div>
+        <div class="tab-chip" data-shoptab="item">소모품/장비</div>
+        <div class="tab-chip" data-shoptab="expand">수족관 확장</div>
+        <div class="tab-chip" data-shoptab="auto">자동화 장비</div>
+      </div>
+      <div id="shopContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 모달: 탐사 -->
+<div class="modal-overlay" id="modal-explore">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🚀 탐사</h2><button class="modal-close" data-close="explore">✕</button></div>
+    <div class="modal-body" id="exploreContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 연구소(유전자 조합/분해/돌연변이/신종창조) -->
+<div class="modal-overlay" id="modal-genelab">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🧪 유전자 연구소</h2><button class="modal-close" data-close="genelab">✕</button></div>
+    <div class="modal-body">
+      <div class="tab-row" id="geneTabs">
+        <div class="tab-chip active" data-genetab="combine">조합</div>
+        <div class="tab-chip" data-genetab="dismantle">분해</div>
+        <div class="tab-chip" data-genetab="mutation">돌연변이 연구</div>
+        <div class="tab-chip" data-genetab="newborn">신종 창조</div>
+      </div>
+      <div id="genelabContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 모달: 도감 -->
+<div class="modal-overlay" id="modal-dex">
+  <div class="modal-box">
+    <div class="modal-head"><h2>📖 도감</h2><button class="modal-close" data-close="dex">✕</button></div>
+    <div class="modal-body" id="dexContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 퀘스트 -->
+<div class="modal-overlay" id="modal-quest">
+  <div class="modal-box">
+    <div class="modal-head"><h2>📋 일일 퀘스트</h2><button class="modal-close" data-close="quest">✕</button></div>
+    <div class="modal-body" id="questContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 업적 -->
+<div class="modal-overlay" id="modal-achievement">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🏆 업적</h2><button class="modal-close" data-close="achievement">✕</button></div>
+    <div class="modal-body" id="achievementContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 설정 -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-box">
+    <div class="modal-head"><h2>⚙ 설정</h2><button class="modal-close" data-close="settings">✕</button></div>
+    <div class="modal-body">
+      <button class="btn full primary" id="btnManualSave" style="margin-bottom:10px;">💾 수동 저장</button>
+      <button class="btn full" id="btnExportSave" style="margin-bottom:10px;">📤 저장 데이터 내보내기</button>
+      <button class="btn full danger" id="btnResetGame">🗑 게임 초기화</button>
+      <p style="font-size:11px;color:var(--text-low);margin-top:14px;line-height:1.6;">
+        게임은 10초마다 자동 저장됩니다. 초기화 시 모든 진행 상황이 영구적으로 삭제됩니다.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- 모달: 물고기 상세 (모바일 friendly) -->
+<div class="modal-overlay" id="modal-fishdetail">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-head"><h2 id="fdName">물고기 정보</h2><button class="modal-close" data-close="fishdetail">✕</button></div>
+    <div class="modal-body" id="fishDetailBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   data.js
+   게임 데이터 정의: 등급, 어종, 지역, 조합 레시피, 상점, 퀘스트,
+   업적, 성격, 알/부화, 유전자 연구, 행성 개척, 메인 퀘스트
+   ============================================================ */
+
+/* ---------- 등급 시스템 ----------
+   mult: 초당 자동수익 계산에 사용되는 등급 배율 (밸런스 재설계)
+   eggWeight: 알 부화 시 등급 확률 가중치
+*/
+const GRADES = [
+  { id:'normal',   name:'일반',  color:'#9aa3c7', mult:1,    weight:46, eggWeight:40 },
+  { id:'advanced', name:'고급',  color:'#5dffb0', mult:2.4,  weight:24, eggWeight:26 },
+  { id:'rare',     name:'희귀',  color:'#4fd8ff', mult:5.6,  weight:14, eggWeight:16 },
+  { id:'epic',     name:'영웅',  color:'#9b6bff', mult:12.5, weight:8,  eggWeight:9  },
+  { id:'legend',   name:'전설',  color:'#ffce54', mult:27,   weight:4,  eggWeight:5  },
+  { id:'myth',     name:'신화',  color:'#ff6b9d', mult:58,   weight:2.2,eggWeight:2.4},
+  { id:'cosmic',   name:'우주',  color:'#7ce8ff', mult:125,  weight:1.2,eggWeight:1  },
+  { id:'trans',    name:'초월',  color:'#ffffff', mult:270,  weight:0.5,eggWeight:0.4},
+  { id:'god',      name:'신급',  color:'#ffd9f3', mult:580,  weight:0.1,eggWeight:0.12},
+];
+function gradeInfo(id){ return GRADES.find(g=>g.id===id) || GRADES[0]; }
+function gradeIndex(id){ return GRADES.findIndex(g=>g.id===id); }
+function gradeAtIndex(i){ return GRADES[Math.max(0, Math.min(GRADES.length-1, i))]; }
+
+/* ---------- 성장 단계 ---------- */
+const GROWTH_STAGES = [
+  { id:'fry',   name:'치어',  scale:0.55, xpMult:1 },
+  { id:'juv',   name:'유어',  scale:0.75, xpMult:1.4 },
+  { id:'adult', name:'성어',  scale:1.0,  xpMult:1.9 },
+  { id:'giant', name:'거대종', scale:1.3,  xpMult:2.6 },
+];
+
+/* ---------- 물고기 성격 시스템 ----------
+   각 성격은 패시브 보정치를 가짐:
+   incomeMult: 초당 수익 배율, xpMult: 먹이 경험치 배율,
+   happyDecayMult: 행복도 감소 배율, exploreTimeMult: 자동탐사 시간 배율(드론 보유 시),
+   sellMult: 판매가 배율
+*/
+const PERSONALITIES = [
+  { id:'explorer', name:'탐험가', emoji:'🧭', desc:'탐사 시간이 짧고 알을 더 잘 찾습니다.',
+    incomeMult:1.0, xpMult:1.0, happyDecayMult:1.0, exploreTimeMult:0.82, sellMult:1.0, eggBonus:1.25 },
+  { id:'glutton', name:'식탐왕', emoji:'🍖', desc:'먹이로 더 많은 경험치를 얻지만 먹이를 더 빨리 소비합니다.',
+    incomeMult:1.0, xpMult:1.35, happyDecayMult:1.15, exploreTimeMult:1.0, sellMult:1.0, eggBonus:1.0 },
+  { id:'coward', name:'겁쟁이', emoji:'😨', desc:'행복도가 빨리 떨어지지만 위험 지역에서 생존율이 높습니다.',
+    incomeMult:0.92, xpMult:1.0, happyDecayMult:1.4, exploreTimeMult:1.0, sellMult:0.95, eggBonus:1.0 },
+  { id:'genius', name:'천재', emoji:'🧠', desc:'경험치 획득과 자동 수익이 모두 향상됩니다.',
+    incomeMult:1.25, xpMult:1.2, happyDecayMult:1.0, exploreTimeMult:1.0, sellMult:1.05, eggBonus:1.0 },
+  { id:'aggressive', name:'공격적', emoji:'🔥', desc:'판매가가 높지만 행복도 감소가 빠릅니다.',
+    incomeMult:1.1, xpMult:1.0, happyDecayMult:1.25, exploreTimeMult:0.95, sellMult:1.3, eggBonus:1.0 },
+];
+function personalityInfo(id){ return PERSONALITIES.find(p=>p.id===id) || PERSONALITIES[0]; }
+function rollPersonality(){ return PERSONALITIES[Math.floor(Math.random()*PERSONALITIES.length)].id; }
+
+/* ---------- 진화 트리 (어종 정의) ---------- */
+const SPECIES = {
+  goldfish: { id:'goldfish', name:'금붕어', emoji:'🐠', grade:'normal', baseSell:5, baseLifespan:480, region:'beginner_sea', evolvesTo:'golden_goldfish', evolveReq:{stage:'adult', level:5}, skill:null },
+  golden_goldfish: { id:'golden_goldfish', name:'황금 금붕어', emoji:'🐟', grade:'advanced', baseSell:14, baseLifespan:600, region:'beginner_sea', evolvesTo:'sun_goldfish', evolveReq:{stage:'adult', level:10}, skill:'행복도 회복 속도 +20%' },
+  sun_goldfish: { id:'sun_goldfish', name:'태양 금붕어', emoji:'🟠', grade:'rare', baseSell:38, baseLifespan:780, region:'beginner_sea', evolvesTo:'star_fish', evolveReq:{stage:'adult', level:18}, skill:'초당 수익 +10%' },
+  star_fish: { id:'star_fish', name:'항성어', emoji:'⭐', grade:'epic', baseSell:95, baseLifespan:1000, region:'moon_sea', evolvesTo:'galaxy_fish', evolveReq:{stage:'adult', level:28}, skill:'탐사 성공률 +8%' },
+  galaxy_fish: { id:'galaxy_fish', name:'은하어', emoji:'🌌', grade:'cosmic', baseSell:260, baseLifespan:1400, region:'blackhole', evolvesTo:'cosmic_dragon', evolveReq:{stage:'adult', level:38}, skill:'모든 물고기 수익 +5% (도감 효과)' },
+
+  coral_guppy: { id:'coral_guppy', name:'코랄 구피', emoji:'🐡', grade:'normal', baseSell:6, baseLifespan:420, region:'coral_reef', evolvesTo:'rainbow_guppy', evolveReq:{stage:'adult', level:6}, skill:null },
+  rainbow_guppy: { id:'rainbow_guppy', name:'레인보우 구피', emoji:'🐠', grade:'advanced', baseSell:16, baseLifespan:540, region:'coral_reef', evolvesTo:'prism_guppy', evolveReq:{stage:'adult', level:12}, skill:'성장 속도 +15%' },
+  prism_guppy: { id:'prism_guppy', name:'프리즘 구피', emoji:'🌈', grade:'rare', baseSell:42, baseLifespan:700, region:'coral_reef', evolvesTo:null, evolveReq:null, skill:'유전자 샘플 획득량 +10%' },
+  clownfish: { id:'clownfish', name:'흰동가리', emoji:'🐠', grade:'normal', baseSell:7, baseLifespan:430, region:'coral_reef', evolvesTo:'anemone_guardian', evolveReq:{stage:'adult', level:7}, skill:null },
+  anemone_guardian: { id:'anemone_guardian', name:'말미잘 수호자', emoji:'🪸', grade:'rare', baseSell:48, baseLifespan:760, region:'coral_reef', evolvesTo:null, evolveReq:null, skill:'수족관 행복도 전체 +5' },
+
+  deepsea_lure: { id:'deepsea_lure', name:'아귀', emoji:'🐡', grade:'normal', baseSell:9, baseLifespan:520, region:'deep_sea', evolvesTo:'abyss_lantern', evolveReq:{stage:'adult', level:8}, skill:null },
+  abyss_lantern: { id:'abyss_lantern', name:'심연 랜턴어', emoji:'🏮', grade:'epic', baseSell:110, baseLifespan:900, region:'deep_sea', evolvesTo:null, evolveReq:null, skill:'자동수집 수익 +25%' },
+  giant_squid_jr: { id:'giant_squid_jr', name:'어린 대왕오징어', emoji:'🦑', grade:'advanced', baseSell:22, baseLifespan:600, region:'deep_sea', evolvesTo:'kraken_spawn', evolveReq:{stage:'adult', level:14}, skill:null },
+  kraken_spawn: { id:'kraken_spawn', name:'크라켄의 자손', emoji:'🦑', grade:'legend', baseSell:180, baseLifespan:1100, region:'deep_sea', evolvesTo:null, evolveReq:null, skill:'판매가 +30%' },
+
+  ice_minnow: { id:'ice_minnow', name:'얼음 피라미', emoji:'🐟', grade:'normal', baseSell:8, baseLifespan:460, region:'glacier_sea', evolvesTo:'frost_koi', evolveReq:{stage:'adult', level:8}, skill:null },
+  frost_koi: { id:'frost_koi', name:'서리 잉어', emoji:'🐠', grade:'rare', baseSell:55, baseLifespan:820, region:'glacier_sea', evolvesTo:'glacier_dragonfish', evolveReq:{stage:'adult', level:16}, skill:'먹이 소비량 -15%' },
+  glacier_dragonfish: { id:'glacier_dragonfish', name:'빙하 용어', emoji:'🐉', grade:'myth', baseSell:210, baseLifespan:1200, region:'glacier_sea', evolvesTo:null, evolveReq:null, skill:'수명 +50%' },
+
+  ember_tetra: { id:'ember_tetra', name:'잉걸 테트라', emoji:'🐠', grade:'normal', baseSell:9, baseLifespan:450, region:'volcano_sea', evolvesTo:'magma_eel', evolveReq:{stage:'adult', level:9}, skill:null },
+  magma_eel: { id:'magma_eel', name:'마그마 뱀장어', emoji:'🐍', grade:'epic', baseSell:120, baseLifespan:950, region:'volcano_sea', evolvesTo:null, evolveReq:null, skill:'초당 수익 +15%' },
+
+  lunar_carp: { id:'lunar_carp', name:'월광 잉어', emoji:'🐟', grade:'advanced', baseSell:30, baseLifespan:700, region:'moon_sea', evolvesTo:'astro_carp', evolveReq:{stage:'adult', level:15}, skill:null },
+  astro_carp: { id:'astro_carp', name:'우주 잉어', emoji:'🐠', grade:'epic', baseSell:130, baseLifespan:1000, region:'moon_sea', evolvesTo:null, evolveReq:null, skill:'탐사 시간 -10%' },
+  mars_crawler: { id:'mars_crawler', name:'화성 갑각어', emoji:'🦞', grade:'rare', baseSell:60, baseLifespan:800, region:'mars_sea', evolvesTo:'lava_fish', evolveReq:{stage:'adult', level:18}, skill:null },
+  lava_fish: { id:'lava_fish', name:'용암어', emoji:'🌋', grade:'legend', baseSell:200, baseLifespan:1150, region:'mars_sea', evolvesTo:null, evolveReq:null, skill:'화성/화산 탐사 보상 +20%' },
+
+  storm_jelly: { id:'storm_jelly', name:'폭풍 해파리', emoji:'⚡', grade:'epic', baseSell:140, baseLifespan:1000, region:'jupiter_sea', evolvesTo:'thunder_fish', evolveReq:{stage:'adult', level:22}, skill:null },
+  thunder_fish: { id:'thunder_fish', name:'번개어', emoji:'⚡', grade:'myth', baseSell:260, baseLifespan:1300, region:'jupiter_sea', evolvesTo:null, evolveReq:null, skill:'자동 부화 속도 +20%' },
+  ring_drifter: { id:'ring_drifter', name:'고리 유영어', emoji:'🪐', grade:'rare', baseSell:70, baseLifespan:820, region:'saturn_sea', evolvesTo:'gravity_fish', evolveReq:{stage:'adult', level:20}, skill:null },
+  gravity_fish: { id:'gravity_fish', name:'중력어', emoji:'🪐', grade:'legend', baseSell:220, baseLifespan:1200, region:'saturn_sea', evolvesTo:null, evolveReq:null, skill:'수족관 최대 수용량 +1' },
+  crystal_drifter: { id:'crystal_drifter', name:'결정어', emoji:'💎', grade:'myth', baseSell:280, baseLifespan:1300, region:'saturn_sea', evolvesTo:null, evolveReq:null, skill:'진화석 획득량 +15%' },
+
+  void_wraith: { id:'void_wraith', name:'암흑어', emoji:'🖤', grade:'cosmic', baseSell:320, baseLifespan:1500, region:'blackhole', evolvesTo:'nebula_whale', evolveReq:{stage:'adult', level:30}, skill:null },
+  nebula_whale: { id:'nebula_whale', name:'성운고래', emoji:'🐋', grade:'trans', baseSell:900, baseLifespan:2000, region:'blackhole', evolvesTo:'singularity_god', evolveReq:{stage:'adult', level:40}, skill:'모든 자동화 효율 +20%' },
+  singularity_god: { id:'singularity_god', name:'특이점의 신어', emoji:'✨', grade:'god', baseSell:3000, baseLifespan:3000, region:'blackhole', evolvesTo:'cosmic_dragon', evolveReq:{stage:'adult', level:50}, skill:'전체 수익 +50%' },
+  cosmic_dragon: { id:'cosmic_dragon', name:'코스믹 드래곤', emoji:'🐲', grade:'god', baseSell:8000, baseLifespan:5000, region:'blackhole', evolvesTo:null, evolveReq:null, skill:'전체 수익 +80% · 무한진화 게이트 개방' },
+
+  electric_shark: { id:'electric_shark', name:'전기상어', emoji:'🦈', grade:'epic', baseSell:150, baseLifespan:950, region:'gene_lab', evolvesTo:null, evolveReq:null, skill:'조합종 / 초당 수익 +12%' },
+  abyssal_jelly: { id:'abyssal_jelly', name:'심연 해파리', emoji:'🪼', grade:'rare', baseSell:65, baseLifespan:780, region:'gene_lab', evolvesTo:null, evolveReq:null, skill:'조합종 / 행복도 자동 회복' },
+  basic_eel: { id:'basic_eel', name:'전기뱀장어', emoji:'🐍', grade:'normal', baseSell:10, baseLifespan:460, region:'gene_lab_base', evolvesTo:null, evolveReq:null, skill:null },
+  basic_shark: { id:'basic_shark', name:'상어', emoji:'🦈', grade:'normal', baseSell:12, baseLifespan:500, region:'gene_lab_base', evolvesTo:null, evolveReq:null, skill:null },
+  basic_jelly: { id:'basic_jelly', name:'해파리', emoji:'🪼', grade:'normal', baseSell:8, baseLifespan:440, region:'gene_lab_base', evolvesTo:null, evolveReq:null, skill:null },
+  basic_deepfish: { id:'basic_deepfish', name:'심해어', emoji:'🐡', grade:'normal', baseSell:9, baseLifespan:450, region:'gene_lab_base', evolvesTo:null, evolveReq:null, skill:null },
+  crystal_eel: { id:'crystal_eel', name:'크리스탈 장어', emoji:'🐍', grade:'legend', baseSell:190, baseLifespan:1050, region:'gene_lab', evolvesTo:null, evolveReq:null, skill:'조합종 / 진화석 자동 생성' },
+};
+
+/* ---------- 무한 진화 / 신종 창조 동적 어종 생성 ----------
+   도감 500종 이상 확장을 위한 절차적 생성 구조.
+   "신종 창조"로 만들어진 어종이나, cosmic_dragon 이후의 무한진화는
+   여기서 동적으로 SPECIES 객체에 추가된다.
+*/
+const PROC_PREFIX = ['빛나는','심연의','얼어붙은','불타는','떠도는','일렁이는','속삭이는','잊혀진','균열의','메아리치는','고대의','유령','초신성','중력','파편','공명','잔향','여명','황혼','태초의'];
+const PROC_CORE = ['용','뱀장어','해마','상어','고래','수정체','심장','파편체','정수','눈동자','파동','문어','불가사리','등뼈','비늘체'];
+const PROC_EMOJI = ['🐉','🐍','🐠','🦈','🐋','💠','🫀','🔮','👁️','🌊','🐙','⭐','🦴','✨','🌀','☄️','🪐','🌌'];
+let procSpeciesCounter = 0;
+
+function generateProceduralSpecies(tierIndex, opts={}){
+  // tierIndex: 0부터 시작하는 무한진화/신종 단계. 등급은 tier에 따라 상승.
+  procSpeciesCounter++;
+  const id = (opts.idPrefix||'proc') + '_' + tierIndex + '_' + procSpeciesCounter;
+  const prefix = PROC_PREFIX[Math.floor(Math.random()*PROC_PREFIX.length)];
+  const core = PROC_CORE[Math.floor(Math.random()*PROC_CORE.length)];
+  const emoji = opts.emoji || PROC_EMOJI[Math.floor(Math.random()*PROC_EMOJI.length)];
+  const gradeIdx = Math.min(GRADES.length-1, 6 + Math.floor(tierIndex/3)); // 우주 등급부터 시작해 점차 상승
+  const grade = gradeAtIndex(gradeIdx).id;
+  const baseSell = Math.round(300 * Math.pow(1.35, tierIndex));
+  const baseLifespan = 1500 + tierIndex*120;
+  const sp = {
+    id, name:`${prefix} ${core}`, emoji, grade, baseSell, baseLifespan,
+    region:'deep_space_frontier', evolvesTo:null, evolveReq:null,
+    skill:`무한진화 ${tierIndex+1}단계 / 전체 수익 +${(tierIndex+1)*3}%`,
+    procTier: tierIndex,
+  };
+  SPECIES[id] = sp;
+  return sp;
+}
+
+/* 신종 창조: 완전 신규 어종(낮은 등급대, 도감 확장용)을 생성 */
+function generateNewbornSpecies(){
+  procSpeciesCounter++;
+  const id = 'newborn_' + procSpeciesCounter;
+  const prefix = PROC_PREFIX[Math.floor(Math.random()*PROC_PREFIX.length)];
+  const core = PROC_CORE[Math.floor(Math.random()*PROC_CORE.length)];
+  const emoji = PROC_EMOJI[Math.floor(Math.random()*PROC_EMOJI.length)];
+  const gradeRoll = weightedPickGrade();
+  const gIdx = gradeIndex(gradeRoll);
+  const sp = {
+    id, name:`${prefix} ${core}`, emoji, grade:gradeRoll,
+    baseSell: Math.round(8 * Math.pow(2.1, gIdx)),
+    baseLifespan: 450 + gIdx*120,
+    region:'gene_lab', evolvesTo:null, evolveReq:null,
+    skill:'신종 창조로 탄생한 고유종', isNewborn:true,
+  };
+  SPECIES[id] = sp;
+  return sp;
+}
+function weightedPickGrade(){
+  const total = GRADES.reduce((s,g)=>s+g.weight,0);
+  let r = Math.random()*total;
+  for(const g of GRADES){ if(r < g.weight) return g.id; r -= g.weight; }
+  return GRADES[0].id;
+}
+
+/* ---------- 유전자 조합 레시피 ---------- */
+const GENE_RECIPES = [
+  { a:'basic_eel', b:'basic_shark', result:'electric_shark', rate:0.65 },
+  { a:'basic_jelly', b:'basic_deepfish', result:'abyssal_jelly', rate:0.65 },
+  { a:'crystal_drifter', b:'basic_eel', result:'crystal_eel', rate:0.35 },
+  { a:'crystal_drifter', b:'magma_eel', result:'crystal_eel', rate:0.35 },
+];
+const GENE_RANDOM_POOL = ['coral_guppy','clownfish','ice_minnow','ember_tetra','deepsea_lure','goldfish'];
+
+/* ---------- 알 / 부화 시스템 ----------
+   탐사 시 알을 획득. 알은 등급이 정해진 채로 보관되며,
+   부화소에서 시간이 지나면 부화하여 해당 등급 내에서 지역 서식종 중 하나가 됨.
+*/
+const EGG_TYPES = [
+  { id:'common_egg', name:'평범한 알', emoji:'🥚', minGradeIdx:0, maxGradeIdx:1, hatchTime:20 },
+  { id:'rare_egg', name:'희귀한 알', emoji:'🐣', minGradeIdx:2, maxGradeIdx:3, hatchTime:45 },
+  { id:'cosmic_egg', name:'우주의 알', emoji:'🌑', minGradeIdx:4, maxGradeIdx:6, hatchTime:90 },
+  { id:'mythic_egg', name:'신화의 알', emoji:'💫', minGradeIdx:7, maxGradeIdx:8, hatchTime:160 },
+];
+function eggTypeInfo(id){ return EGG_TYPES.find(e=>e.id===id); }
+
+/* ---------- 지역(탐사) 정의 ----------
+   eggDropRate: 탐사 완료 시 알을 획득할 확률
+   eggPool: 이 지역에서 나올 수 있는 알 종류(가중치 동일 분배)
+*/
+const REGIONS = [
+  { id:'beginner_sea', name:'초보 바다', emoji:'🌊', unlockCost:0, desc:'수족관 여정이 시작되는 평화로운 바다.', species:['goldfish','golden_goldfish'], exploreTime:6, exploreCost:0, rewardGeneMin:1, rewardGeneMax:2, eggDropRate:0.5, eggPool:['common_egg'] },
+  { id:'coral_reef', name:'산호 해역', emoji:'🪸', unlockCost:120, desc:'화려한 산호초 속에 숨어사는 열대어들.', species:['coral_guppy','clownfish','rainbow_guppy'], exploreTime:10, exploreCost:8, rewardGeneMin:2, rewardGeneMax:4, eggDropRate:0.55, eggPool:['common_egg','rare_egg'] },
+  { id:'deep_sea', name:'심해', emoji:'🌑', unlockCost:400, desc:'빛이 닿지 않는 어둠 속, 기이한 생명체들의 영역.', species:['deepsea_lure','giant_squid_jr','abyss_lantern'], exploreTime:15, exploreCost:20, rewardGeneMin:3, rewardGeneMax:6, eggDropRate:0.6, eggPool:['common_egg','rare_egg'] },
+  { id:'glacier_sea', name:'빙하 바다', emoji:'🧊', unlockCost:900, desc:'얼어붙은 해류 아래 잠든 차가운 생명들.', species:['ice_minnow','frost_koi'], exploreTime:20, exploreCost:35, rewardGeneMin:4, rewardGeneMax:7, eggDropRate:0.6, eggPool:['rare_egg'] },
+  { id:'volcano_sea', name:'화산 해역', emoji:'🌋', unlockCost:1700, desc:'뜨거운 용암 줄기 사이를 헤엄치는 불의 어종.', species:['ember_tetra','magma_eel'], exploreTime:26, exploreCost:55, rewardGeneMin:5, rewardGeneMax:9, eggDropRate:0.62, eggPool:['rare_egg','cosmic_egg'] },
+  { id:'moon_sea', name:'달 바다', emoji:'🌙', unlockCost:3200, desc:'우주 진출의 첫 관문, 달의 지하 해양.', species:['lunar_carp','star_fish','astro_carp'], exploreTime:32, exploreCost:90, rewardGeneMin:6, rewardGeneMax:11, eggDropRate:0.65, eggPool:['rare_egg','cosmic_egg'] },
+  { id:'mars_sea', name:'화성 해역', emoji:'🔴', unlockCost:5800, desc:'붉은 행성의 지하에 흐르는 용암 바다.', species:['mars_crawler','lava_fish'], exploreTime:40, exploreCost:140, rewardGeneMin:7, rewardGeneMax:13, eggDropRate:0.66, eggPool:['cosmic_egg'] },
+  { id:'jupiter_sea', name:'목성 폭풍 해역', emoji:'🌀', unlockCost:9500, desc:'끝없는 폭풍 속에서 전기를 두른 생명체들.', species:['storm_jelly','thunder_fish'], exploreTime:48, exploreCost:200, rewardGeneMin:9, rewardGeneMax:16, eggDropRate:0.68, eggPool:['cosmic_egg','mythic_egg'] },
+  { id:'saturn_sea', name:'토성 고리 해역', emoji:'🪐', unlockCost:16000, desc:'얼음과 돌의 고리 사이를 떠도는 신비한 어종.', species:['ring_drifter','gravity_fish','crystal_drifter'], exploreTime:58, exploreCost:300, rewardGeneMin:11, rewardGeneMax:19, eggDropRate:0.7, eggPool:['cosmic_egg','mythic_egg'] },
+  { id:'blackhole', name:'블랙홀 심연', emoji:'⚫', unlockCost:28000, desc:'모든 것을 삼키는 심연, 우주 최고의 어종이 잠든 곳.', species:['void_wraith','nebula_whale','galaxy_fish'], exploreTime:70, exploreCost:480, rewardGeneMin:14, rewardGeneMax:24, eggDropRate:0.75, eggPool:['mythic_egg'] },
+  { id:'deep_space_frontier', name:'심우주 개척지', emoji:'🛰️', unlockCost:45000, desc:'아직 지도에 없는 미지의 영역. 무한히 새로운 생명체가 발견된다.', species:[], exploreTime:85, exploreCost:700, rewardGeneMin:18, rewardGeneMax:30, eggDropRate:0.8, eggPool:['mythic_egg'], isProcedural:true },
+];
+
+/* ---------- 행성 개척 시스템 (장기 콘텐츠) ----------
+   코인/유전자를 투입해 행성을 개척하면 영구 패시브 보너스 제공.
+   투입할수록 다음 레벨 비용 상승, 보너스도 누적 상승 (장기 목표).
+*/
+const PLANETS = [
+  { id:'moon_base', name:'달 기지', emoji:'🌙', baseCost:2000, costGrowth:1.9, bonusPerLevel:0.02, bonusType:'income', desc:'레벨당 전체 초당 수익 +2%' },
+  { id:'mars_colony', name:'화성 식민지', emoji:'🔴', baseCost:6000, costGrowth:1.95, bonusPerLevel:0.015, bonusType:'exploreSpeed', desc:'레벨당 탐사 시간 -1.5%' },
+  { id:'jupiter_station', name:'목성 정거장', emoji:'🌀', baseCost:15000, costGrowth:2.0, bonusPerLevel:0.02, bonusType:'eggRate', desc:'레벨당 알 발견율 +2%' },
+  { id:'saturn_ring_colony', name:'토성 고리 식민지', emoji:'🪐', baseCost:30000, costGrowth:2.05, bonusPerLevel:0.025, bonusType:'geneGain', desc:'레벨당 유전자 샘플 획득 +2.5%' },
+  { id:'frontier_outpost', name:'심우주 전초기지', emoji:'🛰️', baseCost:60000, costGrowth:2.1, bonusPerLevel:0.03, bonusType:'income', desc:'레벨당 전체 초당 수익 +3%' },
+];
+function planetCost(planet, currentLevel){
+  return Math.round(planet.baseCost * Math.pow(planet.costGrowth, currentLevel));
+}
+
+/* ---------- 상점: 물고기 구매 ---------- */
+const SHOP_FISH = [
+  { species:'goldfish', price:25 },
+  { species:'coral_guppy', price:50 },
+  { species:'clownfish', price:55 },
+  { species:'basic_eel', price:75 },
+  { species:'basic_shark', price:100 },
+  { species:'basic_jelly', price:65 },
+  { species:'basic_deepfish', price:85 },
+  { species:'ice_minnow', price:130 },
+  { species:'ember_tetra', price:150 },
+];
+
+/* ---------- 상점: 소모품/장비 ---------- */
+const SHOP_ITEMS = [
+  { id:'feed_small', name:'기본 먹이 5개', desc:'경험치를 약간 제공하는 기본 먹이.', price:18, effect:{type:'feed', amount:5} },
+  { id:'feed_premium', name:'고급 먹이 5개', desc:'경험치를 더 많이 제공하는 고급 먹이.', price:50, effect:{type:'feedPremium', amount:5} },
+  { id:'evo_stone_pack', name:'진화석 x3', desc:'진화 가속에 사용되는 희귀 자원.', price:160, effect:{type:'evoStone', amount:3} },
+  { id:'happy_potion', name:'행복 영양제', desc:'모든 물고기의 행복도를 즉시 30 회복.', price:65, effect:{type:'happyAll', amount:30} },
+  { id:'common_egg_buy', name:'평범한 알 1개', desc:'상점에서 즉시 구매하는 평범한 알.', price:90, effect:{type:'buyEgg', eggId:'common_egg'} },
+  { id:'rare_egg_buy', name:'희귀한 알 1개', desc:'상점에서 즉시 구매하는 희귀한 알.', price:320, effect:{type:'buyEgg', eggId:'rare_egg'} },
+];
+
+/* ---------- 상점: 수족관 확장 ---------- */
+const SHOP_EXPAND = [
+  { addCapacity:5, price:250 },
+  { addCapacity:5, price:650 },
+  { addCapacity:10, price:1600 },
+  { addCapacity:10, price:4000 },
+  { addCapacity:15, price:9500 },
+  { addCapacity:20, price:22000 },
+  { addCapacity:25, price:50000 },
+  { addCapacity:30, price:110000 },
+];
+
+/* ---------- 자동화 시스템 ---------- */
+const AUTOMATIONS = [
+  { id:'auto_feeder', name:'자동 먹이 공급기', desc:'주기적으로 모든 물고기에게 자동으로 먹이를 줍니다.', price:350, interval:8 },
+  { id:'auto_collector', name:'자동 수익 수집기', desc:'초당 수익 효율을 +30% 증폭시킵니다.', price:700, interval:5 },
+  { id:'auto_hatchery', name:'자동 부화기', desc:'보유한 알을 더 빠르게 부화시킵니다 (부화시간 -40%).', price:1800, interval:45 },
+  { id:'auto_drone', name:'자동 탐사 드론', desc:'해금된 지역을 자동으로 주기적으로 탐사합니다.', price:4500, interval:60 },
+];
+
+/* ---------- 메인 퀘스트 라인 (항상 다음 목표 표시) ---------- */
+const MAIN_QUEST_LINE = [
+  { id:'mq1', name:'첫 걸음', desc:'물고기를 3마리로 늘리세요.', check:s=>s.fish.length>=3, reward:{coin:80} },
+  { id:'mq2', name:'먹이는 사랑', desc:'먹이주기를 15회 수행하세요.', check:s=>s.stats.totalFeed>=15, reward:{coin:120, feed:5} },
+  { id:'mq3', name:'첫 진화', desc:'물고기를 1회 진화시키세요.', check:s=>s.stats.totalEvolves>=1, reward:{coin:200, evoStone:2} },
+  { id:'mq4', name:'산호 해역 진출', desc:'산호 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('coral_reef'), reward:{coin:150} },
+  { id:'mq5', name:'알을 품다', desc:'알을 1개 부화시키세요.', check:s=>s.stats.totalHatched>=1, reward:{coin:250, gene:5} },
+  { id:'mq6', name:'수족관 확장', desc:'수족관 수용량을 15 이상으로 확장하세요.', check:s=>s.capacity>=15, reward:{coin:300} },
+  { id:'mq7', name:'유전자 연구 시작', desc:'유전자 조합을 1회 실행하세요.', check:s=>s.stats.totalGeneCombine>=1, reward:{coin:350, evoStone:3} },
+  { id:'mq8', name:'자동화의 시작', desc:'자동화 장비를 1개 이상 설치하세요.', check:s=>Object.values(s.automations).some(v=>v), reward:{coin:400} },
+  { id:'mq9', name:'심해 탐사', desc:'심해 지역을 해금하세요.', check:s=>s.unlockedRegions.includes('deep_sea'), reward:{coin:500} },
+  { id:'mq10', name:'도감 수집가', desc:'도감에 15종을 등록하세요.', check:s=>Object.keys(s.dex).length>=15, reward:{coin:600, evoStone:4} },
+  { id:'mq11', name:'우주 진출', desc:'달 바다 지역을 해금하세요.', check:s=>s.unlockedRegions.includes('moon_sea'), reward:{coin:1000} },
+  { id:'mq12', name:'분해 연구', desc:'물고기를 1회 분해하여 유전자를 추출하세요.', check:s=>s.stats.totalDismantle>=1, reward:{coin:600, gene:8} },
+  { id:'mq13', name:'돌연변이 연구', desc:'돌연변이 연구를 1회 수행하세요.', check:s=>s.stats.totalMutation>=1, reward:{coin:800, evoStone:5} },
+  { id:'mq14', name:'신종 창조', desc:'신종 창조를 1회 수행하세요.', check:s=>s.stats.totalNewborn>=1, reward:{coin:1200, gene:10} },
+  { id:'mq15', name:'행성 개척', desc:'행성을 1회 이상 개척하세요.', check:s=>Object.values(s.planets||{}).some(v=>v>=1), reward:{coin:1500} },
+  { id:'mq16', name:'화성 정복', desc:'화성 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('mars_sea'), reward:{coin:2000} },
+  { id:'mq17', name:'전설의 수집가', desc:'전설 등급 이상 물고기 3마리를 보유하세요.', check:s=>s.fish.filter(f=>gradeIndex(SPECIES[f.species].grade)>=4).length>=3, reward:{coin:2500, evoStone:8} },
+  { id:'mq18', name:'목성의 폭풍', desc:'목성 폭풍 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('jupiter_sea'), reward:{coin:3500} },
+  { id:'mq19', name:'토성의 고리', desc:'토성 고리 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('saturn_sea'), reward:{coin:5000} },
+  { id:'mq20', name:'심연의 문턱', desc:'블랙홀 심연 지역을 해금하세요.', check:s=>s.unlockedRegions.includes('blackhole'), reward:{coin:8000, evoStone:15} },
+  { id:'mq21', name:'신급 탄생', desc:'신급 등급 물고기를 보유하세요.', check:s=>s.fish.some(f=>SPECIES[f.species] && SPECIES[f.species].grade==='god'), reward:{coin:15000} },
+  { id:'mq22', name:'무한의 문', desc:'심우주 개척지를 해금하세요.', check:s=>s.unlockedRegions.includes('deep_space_frontier'), reward:{coin:25000, evoStone:25} },
+];
+
+/* ---------- 일일 퀘스트 풀 ---------- */
+const QUEST_POOL = [
+  { id:'feed10', name:'먹이 주기', desc:'물고기에게 먹이 10회 주기', target:10, type:'feedCount', reward:{coin:80, gene:1} },
+  { id:'grow3', name:'성장시키기', desc:'물고기 3마리 성장(레벨업)시키기', target:3, type:'growCount', reward:{coin:120, evoStone:1} },
+  { id:'explore1', name:'탐사 수행', desc:'탐사 1회 완료하기', target:1, type:'exploreCount', reward:{coin:150, gene:2} },
+  { id:'sell2', name:'물고기 판매', desc:'물고기 2마리 판매하기', target:2, type:'sellCount', reward:{coin:100} },
+  { id:'evolve1', name:'진화 달성', desc:'물고기 1마리 진화시키기', target:1, type:'evolveCount', reward:{coin:200, evoStone:2} },
+  { id:'hatch1', name:'알 부화', desc:'알 1개 부화시키기', target:1, type:'hatchCount', reward:{coin:130, gene:2} },
+];
+
+/* ---------- 업적 목록 ---------- */
+const ACHIEVEMENT_LIST = [
+  { id:'first_fish', name:'첫 물고기 획득', desc:'두 번째 물고기를 얻는다', check:s=>s.fish.length>=2, reward:{coin:50} },
+  { id:'first_evolve', name:'첫 진화 달성', desc:'물고기를 1회 진화시킨다', check:s=>s.stats.totalEvolves>=1, reward:{coin:100} },
+  { id:'dex10', name:'10종 발견', desc:'도감에 10종을 등록한다', check:s=>Object.keys(s.dex).length>=10, reward:{coin:300} },
+  { id:'dex25', name:'25종 발견', desc:'도감에 25종을 등록한다', check:s=>Object.keys(s.dex).length>=25, reward:{coin:1000,evoStone:5} },
+  { id:'space_enter', name:'우주 진출', desc:'달 바다 지역을 해금한다', check:s=>s.unlockedRegions.includes('moon_sea'), reward:{coin:500} },
+  { id:'god_fish', name:'신급 물고기 획득', desc:'신급 등급 물고기를 보유한다', check:s=>s.fish.some(f=>SPECIES[f.species] && SPECIES[f.species].grade==='god'), reward:{coin:5000,evoStone:20} },
+  { id:'coin10k', name:'코인 10,000 달성', desc:'코인을 10,000개 이상 보유한다', check:s=>s.coin>=10000, reward:{evoStone:10} },
+  { id:'capacity20', name:'대형 수족관', desc:'수족관 수용량을 20 이상으로 확장한다', check:s=>s.capacity>=20, reward:{coin:800} },
+  { id:'first_hatch', name:'첫 부화', desc:'알을 1회 부화시킨다', check:s=>s.stats.totalHatched>=1, reward:{coin:150} },
+  { id:'first_dismantle', name:'첫 분해', desc:'물고기를 1회 분해한다', check:s=>s.stats.totalDismantle>=1, reward:{coin:150} },
+  { id:'first_mutation', name:'첫 돌연변이 연구', desc:'돌연변이 연구를 1회 수행한다', check:s=>s.stats.totalMutation>=1, reward:{coin:300} },
+  { id:'first_newborn', name:'첫 신종 창조', desc:'신종 창조를 1회 수행한다', check:s=>s.stats.totalNewborn>=1, reward:{coin:600, evoStone:5} },
+  { id:'first_planet', name:'첫 행성 개척', desc:'행성을 1회 개척한다', check:s=>Object.values(s.planets||{}).some(v=>v>=1), reward:{coin:500} },
+  { id:'dex50', name:'50종 발견', desc:'도감에 50종을 등록한다', check:s=>Object.keys(s.dex).length>=50, reward:{coin:3000, evoStone:15} },
+  { id:'income100', name:'초당 100 수익', desc:'초당 자동 수익 100을 달성한다', check:s=>computeTotalIncomePerSecond(s)>=100, reward:{coin:1000} },
+];
+
+/* ---------- 등급별 시각 효과 강조 기준 ---------- */
+const RARE_APPEAR_GRADES = ['epic','legend','myth','cosmic','trans','god'];
+
+</script>
+<script>
+/* ============================================================
+   engine.js
+   게임 엔진: 상태 관리, Fish 클래스, 저장/불러오기, 핵심 로직
+   ============================================================ */
+
+const SAVE_KEY = 'cosmicAquariumSave_v2';
+
+/* ---------- Fish 클래스 ---------- */
+class Fish {
+  constructor(speciesId, opts={}){
+    this.uid = opts.uid || ('f_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7));
+    this.species = speciesId;
+    this.level = opts.level || 1;
+    this.xp = opts.xp || 0;
+    this.stage = opts.stage || 'fry';
+    this.happiness = opts.happiness !== undefined ? opts.happiness : 80;
+    this.age = opts.age || 0;
+    this.bornAt = opts.bornAt || Date.now();
+    this.personality = opts.personality || rollPersonality();
+    this.x = opts.x !== undefined ? opts.x : Math.random()*70+10;
+    this.y = opts.y !== undefined ? opts.y : Math.random()*60+15;
+    this.dir = Math.random()<0.5 ? -1 : 1;
+    this.swimSpeed = 0.015 + Math.random()*0.02;
+    this.swimPhase = Math.random()*1000;
+    this.targetX = this.x;
+    this.targetY = this.y;
+  }
+
+  get def(){ return SPECIES[this.species]; }
+  get grade(){ return gradeInfo(this.def.grade); }
+  get stageInfo(){ return GROWTH_STAGES.find(s=>s.id===this.stage); }
+  get pers(){ return personalityInfo(this.personality); }
+
+  xpToNextLevel(){
+    return Math.floor(20 * Math.pow(1.16, this.level-1));
+  }
+
+  sellPrice(){
+    const stageMult = this.stageInfo.xpMult;
+    const lvlMult = 1 + this.level*0.12;
+    return Math.round(this.def.baseSell * stageMult * lvlMult * this.pers.sellMult);
+  }
+
+  /* 초당 자동 수익 (밸런스 재설계: 등급+레벨+성격이 모두 반영되어
+     1분 안에 체감 가능한 성장 곡선을 만든다) */
+  incomePerSecond(){
+    const stageMult = this.stageInfo.xpMult;
+    const lvlMult = 1 + this.level*0.05;
+    const base = 0.12 * this.grade.mult * stageMult * lvlMult;
+    return base * this.pers.incomeMult;
+  }
+  incomePerMinute(){
+    return Math.round(this.incomePerSecond()*60);
+  }
+
+  addXp(amount){
+    amount = amount * this.pers.xpMult;
+    this.xp += amount;
+    let leveled = false;
+    while(this.xp >= this.xpToNextLevel()){
+      this.xp -= this.xpToNextLevel();
+      this.level++;
+      leveled = true;
+      this.updateStage();
+    }
+    return leveled;
+  }
+
+  updateStage(){
+    if(this.level >= 25) this.stage = 'giant';
+    else if(this.level >= 12) this.stage = 'adult';
+    else if(this.level >= 5) this.stage = 'juv';
+    else this.stage = 'fry';
+  }
+
+  canEvolve(){
+    const req = this.def.evolveReq;
+    if(!req) return false;
+    return this.gradeStageOk(req);
+  }
+  gradeStageOk(req){
+    const order = ['fry','juv','adult','giant'];
+    return order.indexOf(this.stage) >= order.indexOf(req.stage) && this.level >= req.level;
+  }
+}
+
+/* ---------- 알(Egg) 클래스 ---------- */
+class EggInstance {
+  constructor(eggTypeId, opts={}){
+    this.uid = opts.uid || ('e_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7));
+    this.eggType = eggTypeId;
+    this.regionId = opts.regionId || null; // 부화 시 어종 풀 결정에 사용
+    this.startedAt = opts.startedAt || Date.now();
+    this.hatchAt = opts.hatchAt || (Date.now() + eggTypeInfo(eggTypeId).hatchTime*1000);
+  }
+  get def(){ return eggTypeInfo(this.eggType); }
+  remainSec(){ return Math.max(0, Math.ceil((this.hatchAt - Date.now())/1000)); }
+  isReady(){ return Date.now() >= this.hatchAt; }
+}
+
+/* ---------- 게임 상태(State) ---------- */
+class GameState {
+  constructor(){
+    this.coin = 100;
+    this.evoStone = 0;
+    this.gene = 0;
+    this.feedStock = 5;
+    this.premiumFeedStock = 0;
+    this.capacity = 10;
+    this.fish = [ new Fish('goldfish', {x:35,y:35}) ];
+    this.dex = { goldfish: true };
+    this.unlockedRegions = ['beginner_sea'];
+    this.currentRegion = 'beginner_sea';
+    this.automations = {};
+    this.quests = [];
+    this.questsDate = null;
+    this.achievementsDone = {};
+    this.eggs = [];
+    this.planets = {};
+    this.stats = {
+      totalFeed:0, totalGrow:0, totalExplore:0, totalSell:0, totalEvolves:0,
+      totalHatched:0, totalDismantle:0, totalMutation:0, totalNewborn:0, totalGeneCombine:0,
+      lastTick: Date.now(),
+    };
+    this.exploring = null;
+    this.lastAutoTick = {};
+    this.createdAt = Date.now();
+    this.mainQuestIndex = 0;
+  }
+}
+
+/* ---------- 저장/불러오기 ---------- */
+function serializeState(state){
+  return JSON.stringify({
+    coin:state.coin, evoStone:state.evoStone, gene:state.gene,
+    feedStock:state.feedStock, premiumFeedStock:state.premiumFeedStock,
+    capacity:state.capacity,
+    fish: state.fish.map(f=>({
+      uid:f.uid, species:f.species, level:f.level, xp:f.xp, stage:f.stage,
+      happiness:f.happiness, age:f.age, bornAt:f.bornAt, personality:f.personality
+    })),
+    dex:state.dex,
+    unlockedRegions:state.unlockedRegions,
+    currentRegion:state.currentRegion,
+    automations:state.automations,
+    quests:state.quests,
+    questsDate:state.questsDate,
+    achievementsDone:state.achievementsDone,
+    eggs: state.eggs.map(e=>({ uid:e.uid, eggType:e.eggType, regionId:e.regionId, startedAt:e.startedAt, hatchAt:e.hatchAt })),
+    planets: state.planets,
+    stats:state.stats,
+    exploring:state.exploring,
+    createdAt:state.createdAt,
+    mainQuestIndex: state.mainQuestIndex,
+    procSpecies: Object.keys(SPECIES).filter(id=>SPECIES[id].procTier!==undefined || SPECIES[id].isNewborn).map(id=>SPECIES[id]),
+    expandBought: state._expandBought || 0,
+    savedAt: Date.now(),
+  });
+}
+
+function deserializeState(json){
+  const d = JSON.parse(json);
+  // 절차적으로 생성된 어종 복원 (저장된 신종/무한진화 어종을 SPECIES에 다시 등록)
+  if(d.procSpecies){
+    for(const sp of d.procSpecies){ SPECIES[sp.id] = sp; }
+  }
+  const state = new GameState();
+  state.coin = d.coin ?? 100;
+  state.evoStone = d.evoStone ?? 0;
+  state.gene = d.gene ?? 0;
+  state.feedStock = d.feedStock ?? 5;
+  state.premiumFeedStock = d.premiumFeedStock ?? 0;
+  state.capacity = d.capacity ?? 10;
+  state.fish = (d.fish||[]).map(f=>new Fish(f.species, f));
+  if(state.fish.length===0) state.fish.push(new Fish('goldfish',{x:35,y:35}));
+  state.dex = d.dex || {goldfish:true};
+  state.unlockedRegions = d.unlockedRegions || ['beginner_sea'];
+  state.currentRegion = d.currentRegion || 'beginner_sea';
+  state.automations = d.automations || {};
+  state.quests = d.quests || [];
+  state.questsDate = d.questsDate || null;
+  state.achievementsDone = d.achievementsDone || {};
+  state.eggs = (d.eggs||[]).map(e=>new EggInstance(e.eggType, e));
+  state.planets = d.planets || {};
+  state.stats = Object.assign({
+    totalFeed:0, totalGrow:0, totalExplore:0, totalSell:0, totalEvolves:0,
+    totalHatched:0, totalDismantle:0, totalMutation:0, totalNewborn:0, totalGeneCombine:0,
+    lastTick:Date.now()
+  }, d.stats||{});
+  state.exploring = d.exploring || null;
+  state.createdAt = d.createdAt || Date.now();
+  state.mainQuestIndex = d.mainQuestIndex || 0;
+  state._expandBought = d.expandBought || 0;
+  state._savedAt = d.savedAt || Date.now();
+  return state;
+}
+
+function saveGame(state){
+  try{
+    localStorage.setItem(SAVE_KEY, serializeState(state));
+    return true;
+  }catch(e){
+    console.error('save failed', e);
+    return false;
+  }
+}
+
+function loadGame(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    return deserializeState(raw);
+  }catch(e){
+    console.error('load failed', e);
+    return null;
+  }
+}
+
+function resetGame(){
+  localStorage.removeItem(SAVE_KEY);
+}
+
+/* ---------- 유틸 ---------- */
+function pickRandomFromList(list){
+  return list[Math.floor(Math.random()*list.length)];
+}
+
+/* ---------- 행성 보너스 계산 ---------- */
+function getPlanetBonus(state, bonusType){
+  let total = 0;
+  for(const p of PLANETS){
+    if(p.bonusType !== bonusType) continue;
+    const lvl = state.planets[p.id] || 0;
+    total += lvl * p.bonusPerLevel;
+  }
+  return total;
+}
+
+/* ---------- 초당 총수익 계산 (밸런스 재설계 핵심) ---------- */
+function computeTotalIncomePerSecond(state){
+  let total = 0;
+  for(const f of state.fish){
+    total += f.incomePerSecond();
+  }
+  const hasGalaxy = state.fish.some(f=>f.species==='galaxy_fish');
+  const hasGod = state.fish.some(f=>f.species==='singularity_god');
+  const hasDragon = state.fish.some(f=>f.species==='cosmic_dragon');
+  if(hasGalaxy) total *= 1.05;
+  if(hasGod) total *= 1.5;
+  if(hasDragon) total *= 1.8;
+  if(state.automations.auto_collector) total *= 1.3;
+  total *= (1 + getPlanetBonus(state, 'income'));
+  return total;
+}
+function computeTotalIncomePerMinute(state){
+  return Math.round(computeTotalIncomePerSecond(state)*60);
+}
+
+</script>
+<script>
+/* ============================================================
+   main.js
+   UI 렌더링, 이벤트 처리, 게임 루프
+   ============================================================ */
+
+let STATE = null;
+let selectedFishUid = null;
+let activeShopTab = 'fish';
+let activeGeneTab = 'combine';
+let geneSlotA = null;
+let geneSlotB = null;
+let dismantleSlot = null;
+let tankRect = { w: 800, h: 400 };
+let coinFlashAccum = 0;
+
+/* ---------- 초기화 ---------- */
+function initGame(){
+  const loaded = loadGame();
+  if(loaded){
+    STATE = loaded;
+    applyOfflineProgress();
+  } else {
+    STATE = new GameState();
+  }
+  ensureDailyQuests();
+  renderAll();
+  renderMainQuestBanner();
+  startGameLoop();
+  spawnAmbientBubbles();
+  spawnLightRays();
+}
+
+function applyOfflineProgress(){
+  const last = STATE._savedAt || Date.now();
+  const diffSec = Math.min(8*3600, Math.max(0, Math.floor((Date.now()-last)/1000)));
+  // 탐사가 진행 중이었다면 완료 처리
+  if(STATE.exploring && STATE.exploring.endsAt <= Date.now()){
+    finishExploration(true);
+  }
+  // 알 부화 체크는 gameTick에서 자연히 처리되지만, 오프라인 동안 다 부화했을 가능성 처리
+  if(diffSec < 5) return;
+  const perSec = computeTotalIncomePerSecond(STATE);
+  const earned = Math.round(perSec * diffSec);
+  if(earned > 0){
+    STATE.coin += earned;
+    showOfflineModal(diffSec, earned);
+  }
+}
+
+function showOfflineModal(diffSec, earned){
+  const hrs = Math.floor(diffSec/3600);
+  const mins = Math.floor((diffSec%3600)/60);
+  const timeStr = hrs>0 ? `${hrs}시간 ${mins}분` : `${mins}분`;
+  const box = document.getElementById('offlineModalBody');
+  if(box){
+    box.innerHTML = `
+      <div style="text-align:center;padding:10px 0;">
+        <div style="font-size:42px;">🌙</div>
+        <div style="font-size:14px;color:var(--text-mid);margin:10px 0 4px;">접속하지 않은 동안</div>
+        <div style="font-size:18px;font-weight:800;color:var(--accent-cyan);margin-bottom:14px;">${timeStr}</div>
+        <div style="font-size:13px;color:var(--text-mid);">자동 수익이 누적되었습니다</div>
+        <div style="font-size:26px;font-weight:800;color:var(--accent-gold);margin-top:6px;">🪙 +${earned.toLocaleString()}</div>
+      </div>
+    `;
+  }
+  openModal('offline');
+}
+
+/* ---------- 일일 퀘스트 갱신 ---------- */
+function ensureDailyQuests(){
+  const today = new Date().toDateString();
+  if(STATE.questsDate !== today){
+    STATE.questsDate = today;
+    const shuffled = [...QUEST_POOL].sort(()=>Math.random()-0.5).slice(0,3);
+    STATE.quests = shuffled.map(q=>({...q, progress:0, claimed:false}));
+  }
+}
+
+/* ---------- 게임 루프 ---------- */
+let lastFrame = performance.now();
+function startGameLoop(){
+  setInterval(()=>{ gameTick(1); }, 1000); // 1초 마다 로직 틱
+  setInterval(()=>{ saveGame(STATE); }, 10000); // 10초마다 자동저장
+  requestAnimationFrame(renderLoop);
+}
+
+function gameTick(deltaSec){
+  // 초당 자동 수익 적립 (핵심 시스템 1: 모든 물고기는 초당 코인을 생산)
+  const perSec = computeTotalIncomePerSecond(STATE);
+  if(perSec > 0){
+    STATE.coin += perSec * deltaSec;
+    coinFlashAccum += perSec * deltaSec;
+  }
+  // 행복도 자연 감소 / 자동회복 어종 보정
+  for(const f of STATE.fish){
+    f.age += deltaSec;
+    let decay = 0.06 * deltaSec * f.pers.happyDecayMult;
+    if(f.species==='golden_goldfish' || f.species==='sun_goldfish' || f.species==='star_fish' || f.species==='galaxy_fish') decay *= 0.8;
+    f.happiness = Math.max(0, f.happiness - decay);
+  }
+  // 자동화 처리
+  handleAutomations(deltaSec);
+  // 탐사 진행 체크
+  if(STATE.exploring && Date.now() >= STATE.exploring.endsAt){
+    finishExploration(false);
+  }
+  // 알 부화 체크 (핵심 시스템 5)
+  checkEggHatching();
+  updateHeaderStats();
+  checkAchievements();
+  checkMainQuestProgress();
+  renderTankIncomeBadge();
+}
+
+let autoTimers = {};
+function handleAutomations(deltaSec){
+  const now = Date.now();
+  for(const autoId of Object.keys(STATE.automations)){
+    if(!STATE.automations[autoId]) continue;
+    const def = AUTOMATIONS.find(a=>a.id===autoId);
+    if(!def) continue;
+    if(autoId === 'auto_collector' || autoId === 'auto_hatchery') continue; // 패시브 보너스로 처리됨 (income/hatchTime)
+    if(!STATE.lastAutoTick[autoId]) STATE.lastAutoTick[autoId] = now;
+    const elapsed = (now - STATE.lastAutoTick[autoId])/1000;
+    if(elapsed >= def.interval){
+      STATE.lastAutoTick[autoId] = now;
+      runAutomation(autoId);
+    }
+  }
+}
+
+function runAutomation(autoId){
+  switch(autoId){
+    case 'auto_feeder':
+      feedAllFish(true);
+      break;
+    case 'auto_drone': {
+      if(!STATE.exploring){
+        const region = STATE.unlockedRegions[Math.floor(Math.random()*STATE.unlockedRegions.length)];
+        startExploration(region, true);
+      }
+      break;
+    }
+  }
+  renderAll();
+}
+
+/* ---------- 알 부화 체크 ---------- */
+function checkEggHatching(){
+  if(STATE.eggs.length === 0) return;
+  const ready = STATE.eggs.filter(e=>e.isReady());
+  if(ready.length === 0) return;
+  for(const egg of ready){
+    hatchEgg(egg.uid, false);
+  }
+}
+
+function eggHatchSpeedMult(){
+  return STATE.automations.auto_hatchery ? 0.6 : 1.0;
+}
+
+function hatchEgg(uid, manual){
+  const idx = STATE.eggs.findIndex(e=>e.uid===uid);
+  if(idx === -1) return;
+  const egg = STATE.eggs[idx];
+  if(!egg.isReady() && manual){
+    queueToast('아직 부화하지 않았습니다.', 'warn');
+    return;
+  }
+  STATE.eggs.splice(idx, 1);
+  if(STATE.fish.length >= STATE.capacity){
+    queueToast('수족관이 가득 차서 알이 부화하지 못했습니다. 보유 알이 사라졌습니다.', 'warn');
+    renderAll();
+    return;
+  }
+  const sp = pickHatchSpecies(egg);
+  const f = addFish(sp.id);
+  STATE.stats.totalHatched++;
+  bumpQuestProgress('hatchCount', 1);
+  if(f && RARE_APPEAR_GRADES.includes(sp.grade)){
+    triggerRareAppearEffect(f);
+  }
+  queueToast(`🐣 알이 부화했습니다! ${sp.emoji} ${sp.name} 탄생!`, 'discover');
+  renderAll();
+}
+
+function pickHatchSpecies(egg){
+  const et = egg.def;
+  // 알의 등급 범위 내에서, 가능하면 탐사했던 지역의 서식종 우선, 없으면 전체 풀에서 등급조건으로 선택
+  const region = REGIONS.find(r=>r.id===egg.regionId);
+  let pool = [];
+  if(region && region.species.length){
+    pool = region.species.filter(id=>{
+      const g = gradeIndex(SPECIES[id].grade);
+      return g >= et.minGradeIdx && g <= et.maxGradeIdx;
+    });
+  }
+  if(pool.length === 0){
+    pool = Object.values(SPECIES).filter(sp=>{
+      const g = gradeIndex(sp.grade);
+      return g >= et.minGradeIdx && g <= et.maxGradeIdx && !sp.region?.includes('gene_lab');
+    }).map(sp=>sp.id);
+  }
+  if(pool.length === 0) pool = ['goldfish'];
+  return SPECIES[pickRandomFromList(pool)];
+}
+
+function hatchEggInstant(uid){
+  // 진화석으로 즉시 부화
+  const egg = STATE.eggs.find(e=>e.uid===uid);
+  if(!egg) return;
+  const cost = 2;
+  if(STATE.evoStone < cost){
+    queueToast('진화석이 부족합니다.', 'warn');
+    return;
+  }
+  STATE.evoStone -= cost;
+  egg.hatchAt = Date.now();
+  hatchEgg(uid, true);
+  renderEggModal();
+}
+
+/* ---------- 렌더 루프 (애니메이션) ---------- */
+function renderLoop(t){
+  const dt = Math.min(50, t - lastFrame);
+  lastFrame = t;
+  animateFishPositions(dt);
+  requestAnimationFrame(renderLoop);
+}
+
+function animateFishPositions(dt){
+  const layer = document.getElementById('fishLayer');
+  if(!layer) return;
+  for(const f of STATE.fish){
+    const dx = f.targetX - f.x, dy = f.targetY - f.y;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    if(dist < 1.2){
+      f.targetX = Math.random()*80+5;
+      f.targetY = Math.random()*65+10;
+    } else {
+      f.x += (dx/dist) * f.swimSpeed * (dt/16);
+      f.y += (dy/dist) * f.swimSpeed * (dt/16) * 0.6;
+      f.dir = dx >= 0 ? 1 : -1;
+    }
+    const el = document.getElementById('sprite_'+f.uid);
+    if(el){
+      el.style.left = f.x + '%';
+      el.style.top = f.y + '%';
+      el.classList.toggle('flip', f.dir < 0);
+    }
+  }
+}
+
+/* ---------- 물고기 추가/제거 ---------- */
+function addFish(speciesId, opts={}){
+  if(STATE.fish.length >= STATE.capacity){
+    queueToast('수족관이 가득 찼습니다! 확장이 필요합니다.', 'warn');
+    return null;
+  }
+  const f = new Fish(speciesId, opts);
+  STATE.fish.push(f);
+  const wasNew = !STATE.dex[speciesId];
+  STATE.dex[speciesId] = true;
+  if(wasNew){
+    queueToast(`신규 발견: ${SPECIES[speciesId].name}! 도감에 등록되었습니다.`, 'discover');
+  }
+  renderAll();
+  return f;
+}
+
+function removeFish(uid){
+  STATE.fish = STATE.fish.filter(f=>f.uid!==uid);
+  if(selectedFishUid===uid) selectedFishUid=null;
+}
+
+function sellFish(uid){
+  const f = STATE.fish.find(x=>x.uid===uid);
+  if(!f) return;
+  const price = f.sellPrice();
+  STATE.coin += price;
+  STATE.stats.totalSell++;
+  bumpQuestProgress('sellCount', 1);
+  removeFish(uid);
+  queueToast(`${f.def.name}을 🪙${price}에 판매했습니다.`, '');
+  renderAll();
+  closeModal('fishdetail');
+}
+
+/* ---------- 먹이주기 ---------- */
+function feedFish(uid, premium=false){
+  const f = STATE.fish.find(x=>x.uid===uid);
+  if(!f) return;
+  const stockKey = premium ? 'premiumFeedStock' : 'feedStock';
+  if(STATE[stockKey] <= 0){
+    queueToast('먹이가 부족합니다. 상점에서 구매하세요.', 'warn');
+    return;
+  }
+  STATE[stockKey]--;
+  const xpGain = premium ? 14 : 7;
+  const leveled = f.addXp(xpGain);
+  f.happiness = Math.min(100, f.happiness + (premium?14:8));
+  STATE.stats.totalFeed++;
+  bumpQuestProgress('feedCount', 1);
+  spawnFloatingText(f, `+${Math.round(xpGain*f.pers.xpMult)} XP`, 'var(--accent-cyan)');
+  spawnFeedParticles(f);
+  if(leveled){
+    STATE.stats.totalGrow++;
+    bumpQuestProgress('growCount', 1);
+    triggerLevelUpEffect(f);
+  }
+  if(f.canEvolve()){
+    triggerEvolution(f);
+  }
+  renderAll();
+}
+
+function feedAllFish(silent=false){
+  if(STATE.feedStock <= 0 && STATE.premiumFeedStock <= 0){
+    if(!silent) queueToast('먹이가 부족합니다. 상점에서 구매하세요.', 'warn');
+    return;
+  }
+  let fed = 0;
+  for(const f of STATE.fish){
+    const usePremium = STATE.premiumFeedStock > 0;
+    if(usePremium){ STATE.premiumFeedStock--; }
+    else if(STATE.feedStock > 0){ STATE.feedStock--; }
+    else break;
+    const xpGain = usePremium ? 14 : 7;
+    const leveled = f.addXp(xpGain);
+    f.happiness = Math.min(100, f.happiness + (usePremium?14:8));
+    fed++;
+    if(leveled){ STATE.stats.totalGrow++; bumpQuestProgress('growCount',1); triggerLevelUpEffect(f); }
+    if(f.canEvolve()) triggerEvolution(f);
+  }
+  if(fed>0){
+    STATE.stats.totalFeed += fed;
+    bumpQuestProgress('feedCount', fed);
+    if(!silent) queueToast(`${fed}마리에게 먹이를 주었습니다.`, '');
+  }
+  renderAll();
+}
+
+/* ---------- 진화 ---------- */
+function triggerEvolution(f){
+  const nextId = f.def.evolvesTo;
+  if(!nextId) return;
+  const oldEmoji = f.def.emoji;
+  const oldName = f.def.name;
+  f.species = nextId;
+  f.stage = 'adult';
+  STATE.dex[nextId] = true;
+  STATE.stats.totalEvolves++;
+  bumpQuestProgress('evolveCount', 1);
+  showEvolutionOverlay(oldEmoji, f.def.emoji, f.def.name);
+  queueToast(`${oldName} → ${f.def.name}로 진화했습니다!`, 'evo');
+  // 무한진화 게이트: cosmic_dragon 보유 후 추가 진화가 필요하면 절차적 생성으로 연결 가능
+}
+
+function showEvolutionOverlay(oldEmoji, newEmoji, newName){
+  const ov = document.getElementById('evolutionOverlay');
+  document.getElementById('evoOldEmoji').textContent = oldEmoji;
+  document.getElementById('evoNewEmoji').textContent = newEmoji;
+  document.getElementById('evoNewName').textContent = newName;
+  ov.classList.add('show');
+  setTimeout(()=>ov.classList.remove('show'), 2200);
+}
+
+/* ---------- 화면 연출: 레벨업 효과 ---------- */
+function triggerLevelUpEffect(f){
+  spawnFloatingText(f, 'LEVEL UP!', 'var(--accent-gold)');
+  spawnSparkles(f);
+  const el = document.getElementById('sprite_'+f.uid);
+  if(el){
+    el.classList.remove('levelup-pulse');
+    void el.offsetWidth;
+    el.classList.add('levelup-pulse');
+    setTimeout(()=>el.classList.remove('levelup-pulse'), 900);
+  }
+}
+
+/* ---------- 화면 연출: 희귀 물고기 등장 ---------- */
+function triggerRareAppearEffect(f){
+  const ov = document.getElementById('rareAppearOverlay');
+  if(!ov) return;
+  document.getElementById('rareAppearEmoji').textContent = f.def.emoji;
+  document.getElementById('rareAppearName').textContent = f.def.name;
+  document.getElementById('rareAppearGrade').textContent = f.grade.name + ' 등급';
+  document.getElementById('rareAppearGrade').style.color = f.grade.color;
+  ov.classList.add('show');
+  setTimeout(()=>ov.classList.remove('show'), 2600);
+}
+
+/* ---------- 탐사 ---------- */
+function startExploration(regionId, isAuto=false){
+  if(STATE.exploring){
+    if(!isAuto) queueToast('이미 탐사가 진행 중입니다.', 'warn');
+    return;
+  }
+  const region = REGIONS.find(r=>r.id===regionId);
+  if(!region || !STATE.unlockedRegions.includes(regionId)) return;
+  if(STATE.coin < region.exploreCost){
+    if(!isAuto) queueToast('탐사 비용이 부족합니다.', 'warn');
+    return;
+  }
+  STATE.coin -= region.exploreCost;
+  let timeMult = 1.0;
+  // 탐험가 성격 보유 물고기가 있으면 탐사 시간 단축 (가장 좋은 보너스 적용)
+  for(const f of STATE.fish){
+    if(f.pers.exploreTimeMult < timeMult) timeMult = f.pers.exploreTimeMult;
+  }
+  timeMult *= (1 - getPlanetBonus(STATE, 'exploreSpeed'));
+  timeMult = Math.max(0.35, timeMult);
+  const actualTime = Math.round(region.exploreTime * timeMult);
+  STATE.exploring = { regionId, startedAt:Date.now(), endsAt: Date.now() + actualTime*1000 };
+  if(!isAuto) queueToast(`${region.name} 탐사를 시작합니다. (${actualTime}초)`, '');
+  renderAll();
+}
+
+function finishExploration(offline){
+  const exp = STATE.exploring;
+  if(!exp) return;
+  const region = REGIONS.find(r=>r.id===exp.regionId);
+  STATE.exploring = null;
+  if(!region) return;
+  STATE.stats.totalExplore++;
+  bumpQuestProgress('exploreCount', 1);
+
+  const geneGain = Math.floor(Math.random()*(region.rewardGeneMax-region.rewardGeneMin+1)) + region.rewardGeneMin;
+  const geneBonus = 1 + getPlanetBonus(STATE, 'geneGain');
+  const actualGene = Math.round(geneGain * geneBonus);
+  STATE.gene += actualGene;
+
+  let resultMsg = `${region.name} 탐사 완료! 유전자 샘플 +${actualGene}`;
+
+  // 알 획득 (핵심 시스템 5: 탐사로 알 획득)
+  let eggDropRate = region.eggDropRate || 0.5;
+  for(const f of STATE.fish){ eggDropRate *= f.pers.eggBonus >= 1.25 ? 1.1 : 1; }
+  eggDropRate = Math.min(0.95, eggDropRate * (1+getPlanetBonus(STATE,'eggRate')));
+  if(Math.random() < eggDropRate && region.eggPool && region.eggPool.length){
+    const eggTypeId = pickRandomFromList(region.eggPool);
+    const egg = new EggInstance(eggTypeId, { regionId: region.id });
+    STATE.eggs.push(egg);
+    resultMsg += `, ${egg.def.emoji} ${egg.def.name} 발견!`;
+  } else if(STATE.fish.length < STATE.capacity && Math.random() < 0.25 && region.species.length){
+    const sp = pickRandomFromList(region.species);
+    addFish(sp);
+    resultMsg += `, ${SPECIES[sp].name} 발견!`;
+  }
+  // 심우주 개척지는 절차적 생성 어종의 알만 드랍 (별도 처리: 특수 알)
+  if(region.isProcedural && Math.random() < 0.4){
+    const tier = Math.floor((STATE.stats.totalExplore||0)/10);
+    const sp = generateProceduralSpecies(tier);
+    if(STATE.fish.length < STATE.capacity){
+      addFish(sp.id);
+      resultMsg += `, 미지의 생명체 ${sp.name} 발견!`;
+      triggerRareAppearEffect(STATE.fish[STATE.fish.length-1]);
+    }
+  }
+  // 가끔 진화석 보상
+  if(Math.random() < 0.3){
+    const stoneGain = 1 + Math.floor(Math.random()*2);
+    STATE.evoStone += stoneGain;
+    resultMsg += `, 진화석 +${stoneGain}`;
+  }
+  if(!offline) queueToast(resultMsg, 'discover');
+  renderAll();
+}
+
+function unlockRegion(regionId){
+  const region = REGIONS.find(r=>r.id===regionId);
+  if(!region) return;
+  if(STATE.unlockedRegions.includes(regionId)) return;
+  if(STATE.coin < region.unlockCost){
+    queueToast('코인이 부족합니다.', 'warn');
+    return;
+  }
+  STATE.coin -= region.unlockCost;
+  STATE.unlockedRegions.push(regionId);
+  queueToast(`${region.name} 지역이 해금되었습니다!`, 'discover');
+  renderAll();
+  renderExploreModal();
+}
+
+/* ---------- 유전자 조합 ---------- */
+function tryGeneCombine(){
+  if(!geneSlotA || !geneSlotB){
+    queueToast('두 마리의 물고기를 선택하세요.', 'warn');
+    return;
+  }
+  const cost = 30;
+  if(STATE.gene < cost){
+    queueToast('유전자 샘플이 부족합니다.', 'warn');
+    return;
+  }
+  STATE.gene -= cost;
+  const a = geneSlotA.species, b = geneSlotB.species;
+  let recipe = GENE_RECIPES.find(r => (r.a===a && r.b===b) || (r.a===b && r.b===a));
+  let resultSpecies = null;
+  let success = false;
+
+  if(recipe){
+    success = Math.random() < recipe.rate;
+    if(success) resultSpecies = recipe.result;
+  } else {
+    success = Math.random() < 0.4;
+    if(success) resultSpecies = pickRandomFromList(GENE_RANDOM_POOL);
+  }
+
+  removeFish(geneSlotA.uid);
+  removeFish(geneSlotB.uid);
+  geneSlotA = null; geneSlotB = null;
+  STATE.stats.totalGeneCombine++;
+
+  if(success && resultSpecies){
+    addFish(resultSpecies);
+    queueToast(`조합 성공! ${SPECIES[resultSpecies].name} 탄생!`, 'evo');
+  } else {
+    queueToast('조합에 실패했습니다... 부모 물고기를 잃었습니다.', 'warn');
+  }
+  renderAll();
+  renderGeneLabModal();
+}
+
+/* ---------- 유전자 연구 시스템: 분해 ---------- */
+function dismantleFish(uid){
+  const f = STATE.fish.find(x=>x.uid===uid);
+  if(!f) return;
+  if(STATE.fish.length <= 1){
+    queueToast('최소 1마리는 보유해야 합니다.', 'warn');
+    return;
+  }
+  const gIdx = gradeIndex(f.def.grade);
+  const geneGain = 4 + gIdx*5 + Math.floor(f.level*0.5);
+  STATE.gene += geneGain;
+  removeFish(f.uid);
+  STATE.stats.totalDismantle++;
+  if(dismantleSlot === uid) dismantleSlot = null;
+  queueToast(`${f.def.name}을 분해해 유전자 샘플 +${geneGain}을 획득했습니다.`, 'discover');
+  renderAll();
+  renderGeneLabModal();
+}
+
+/* ---------- 유전자 연구 시스템: 돌연변이 연구 ---------- */
+const MUTATION_COST_GENE = 25;
+const MUTATION_COST_COIN = 150;
+function tryMutationResearch(){
+  if(STATE.gene < MUTATION_COST_GENE || STATE.coin < MUTATION_COST_COIN){
+    queueToast('유전자 샘플 또는 코인이 부족합니다.', 'warn');
+    return;
+  }
+  STATE.gene -= MUTATION_COST_GENE;
+  STATE.coin -= MUTATION_COST_COIN;
+  STATE.stats.totalMutation++;
+  // 보유 물고기 중 무작위 1마리에게 영구 레벨/행복 보너스 부여
+  if(STATE.fish.length===0){ queueToast('보유한 물고기가 없습니다.', 'warn'); return; }
+  const target = pickRandomFromList(STATE.fish);
+  const roll = Math.random();
+  if(roll < 0.5){
+    const lvlGain = 1+Math.floor(Math.random()*3);
+    for(let i=0;i<lvlGain;i++) target.addXp(target.xpToNextLevel());
+    queueToast(`돌연변이 연구 성공! ${target.def.name}의 레벨이 +${lvlGain} 상승했습니다.`, 'evo');
+  } else if(roll < 0.85){
+    target.happiness = 100;
+    STATE.evoStone += 2;
+    queueToast(`돌연변이 연구 성공! ${target.def.name}의 행복도가 회복되고 진화석을 얻었습니다.`, 'discover');
+  } else {
+    // 드물게 즉시 진화 가능 상태로 강제 성장
+    target.level += 5;
+    target.updateStage();
+    queueToast(`대성공! ${target.def.name}이 급속 성장했습니다!`, 'evo');
+    if(target.canEvolve()) triggerEvolution(target);
+  }
+  renderAll();
+  renderGeneLabModal();
+}
+
+/* ---------- 유전자 연구 시스템: 신종 창조 ---------- */
+const NEWBORN_COST_GENE = 80;
+const NEWBORN_COST_EVOSTONE = 5;
+function tryCreateNewborn(){
+  if(STATE.gene < NEWBORN_COST_GENE || STATE.evoStone < NEWBORN_COST_EVOSTONE){
+    queueToast('유전자 샘플 또는 진화석이 부족합니다.', 'warn');
+    return;
+  }
+  if(STATE.fish.length >= STATE.capacity){
+    queueToast('수족관이 가득 찼습니다.', 'warn');
+    return;
+  }
+  STATE.gene -= NEWBORN_COST_GENE;
+  STATE.evoStone -= NEWBORN_COST_EVOSTONE;
+  const sp = generateNewbornSpecies();
+  const f = addFish(sp.id);
+  STATE.stats.totalNewborn++;
+  if(f && RARE_APPEAR_GRADES.includes(sp.grade)) triggerRareAppearEffect(f);
+  queueToast(`신종 창조 성공! ${sp.emoji} ${sp.name}이 탄생했습니다!`, 'evo');
+  renderAll();
+  renderGeneLabModal();
+}
+
+/* ---------- 퀘스트 진행도 ---------- */
+function bumpQuestProgress(type, amount){
+  for(const q of STATE.quests){
+    if(q.type===type && !q.claimed){
+      q.progress = Math.min(q.target, q.progress + amount);
+    }
+  }
+  updateNavDots();
+}
+
+function claimQuest(qid){
+  const q = STATE.quests.find(x=>x.id===qid);
+  if(!q || q.claimed || q.progress < q.target) return;
+  q.claimed = true;
+  if(q.reward.coin) STATE.coin += q.reward.coin;
+  if(q.reward.gene) STATE.gene += q.reward.gene;
+  if(q.reward.evoStone) STATE.evoStone += q.reward.evoStone;
+  queueToast('퀘스트 보상을 받았습니다!', 'discover');
+  renderAll();
+  renderQuestModal();
+}
+
+/* ---------- 메인 퀘스트 라인 (핵심 시스템 6) ---------- */
+function checkMainQuestProgress(){
+  if(STATE.mainQuestIndex >= MAIN_QUEST_LINE.length) return;
+  const mq = MAIN_QUEST_LINE[STATE.mainQuestIndex];
+  if(mq.check(STATE)){
+    claimMainQuest();
+  }
+}
+
+function claimMainQuest(){
+  if(STATE.mainQuestIndex >= MAIN_QUEST_LINE.length) return;
+  const mq = MAIN_QUEST_LINE[STATE.mainQuestIndex];
+  if(mq.reward.coin) STATE.coin += mq.reward.coin;
+  if(mq.reward.gene) STATE.gene += mq.reward.gene;
+  if(mq.reward.evoStone) STATE.evoStone += mq.reward.evoStone;
+  if(mq.reward.feed) STATE.feedStock += mq.reward.feed;
+  queueToast(`🎯 메인 목표 달성: ${mq.name}!`, 'evo');
+  STATE.mainQuestIndex++;
+  renderMainQuestBanner();
+  renderHeader();
+}
+
+function renderMainQuestBanner(){
+  const el = document.getElementById('mainQuestBanner');
+  if(!el) return;
+  if(STATE.mainQuestIndex >= MAIN_QUEST_LINE.length){
+    el.innerHTML = `<span class="mq-ic">🏁</span><div class="mq-text"><div class="mq-title">모든 메인 목표 달성!</div><div class="mq-desc">계속해서 도감을 채우고 우주를 개척해보세요.</div></div>`;
+    return;
+  }
+  const mq = MAIN_QUEST_LINE[STATE.mainQuestIndex];
+  const rewardStr = Object.entries(mq.reward).map(([k,v])=>{
+    if(k==='coin') return `🪙${v}`;
+    if(k==='gene') return `🧬${v}`;
+    if(k==='evoStone') return `💎${v}`;
+    if(k==='feed') return `🍤${v}`;
+    return '';
+  }).join(' ');
+  el.innerHTML = `<span class="mq-ic">🎯</span><div class="mq-text"><div class="mq-title">${mq.name}</div><div class="mq-desc">${mq.desc} · 보상 ${rewardStr}</div></div>`;
+}
+
+/* ---------- 업적 체크 ---------- */
+function checkAchievements(){
+  let changed = false;
+  for(const a of ACHIEVEMENT_LIST){
+    if(!STATE.achievementsDone[a.id] && a.check(STATE)){
+      STATE.achievementsDone[a.id] = true;
+      if(a.reward.coin) STATE.coin += a.reward.coin;
+      if(a.reward.evoStone) STATE.evoStone += a.reward.evoStone;
+      queueToast(`업적 달성: ${a.name}!`, 'discover');
+      changed = true;
+    }
+  }
+  if(changed){ updateNavDots(); updateHeaderStats(); }
+}
+
+function updateNavDots(){
+  const questReady = STATE.quests.some(q=>q.progress>=q.target && !q.claimed);
+  document.getElementById('questDot').style.display = questReady ? 'block':'none';
+  const achReady = ACHIEVEMENT_LIST.some(a=>!STATE.achievementsDone[a.id] && a.check(STATE));
+  document.getElementById('achDot').style.display = achReady ? 'block':'none';
+  const eggReady = STATE.eggs.some(e=>e.isReady());
+  const eggDot = document.getElementById('eggDot');
+  if(eggDot) eggDot.style.display = eggReady ? 'block':'none';
+}
+
+/* ---------- 토스트 ---------- */
+function queueToast(msg, type=''){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(), 3600);
+}
+
+/* ---------- 시각효과: 떠다니는 텍스트, 스파클, 먹이 입자 ---------- */
+function spawnFloatingText(fish, text, color){
+  const layer = document.getElementById('fxLayer');
+  if(!layer) return;
+  const el = document.createElement('div');
+  el.className = 'floating-text';
+  el.style.left = fish.x + '%';
+  el.style.top = fish.y + '%';
+  el.style.color = color;
+  el.textContent = text;
+  layer.appendChild(el);
+  setTimeout(()=>el.remove(), 1200);
+}
+
+function spawnSparkles(fish){
+  const layer = document.getElementById('fxLayer');
+  if(!layer) return;
+  for(let i=0;i<6;i++){
+    const el = document.createElement('div');
+    el.className = 'sparkle';
+    el.style.left = (fish.x + (Math.random()*8-4)) + '%';
+    el.style.top = (fish.y + (Math.random()*8-4)) + '%';
+    el.style.animationDelay = (i*0.05)+'s';
+    layer.appendChild(el);
+    setTimeout(()=>el.remove(), 1300);
+  }
+}
+
+function spawnFeedParticles(fish){
+  const layer = document.getElementById('fxLayer');
+  if(!layer) return;
+  for(let i=0;i<3;i++){
+    const el = document.createElement('div');
+    el.className = 'feed-particle';
+    el.style.left = (fish.x + (Math.random()*6-3)) + '%';
+    el.style.top = (Math.max(0,fish.y-15)) + '%';
+    el.style.animationDelay = (i*0.1)+'s';
+    layer.appendChild(el);
+    setTimeout(()=>el.remove(), 1500);
+  }
+}
+
+function spawnAmbientBubbles(){
+  const area = document.getElementById('tankCanvasArea');
+  setInterval(()=>{
+    if(!area) return;
+    const b = document.createElement('div');
+    b.className='bubble';
+    b.style.left = (Math.random()*95)+'%';
+    const size = 4+Math.random()*8;
+    b.style.width=size+'px'; b.style.height=size+'px';
+    b.style.animationDuration = (5+Math.random()*6)+'s';
+    area.appendChild(b);
+    setTimeout(()=>b.remove(), 12000);
+  }, 700);
+}
+
+function spawnLightRays(){
+  const area = document.getElementById('tankCanvasArea');
+  for(let i=0;i<4;i++){
+    const r = document.createElement('div');
+    r.className='light-ray';
+    r.style.left = (10+i*25)+'%';
+    r.style.animationDelay = (i*1.3)+'s';
+    area.appendChild(r);
+  }
+  const wave = document.createElement('div');
+  wave.className='wave-overlay';
+  area.appendChild(wave);
+  // 우주 테마 강화: 행성/성운/우주선 배경 요소
+  spawnSpaceDecor(area);
+}
+
+function spawnSpaceDecor(area){
+  const planetEl = document.createElement('div');
+  planetEl.className='deco-planet';
+  planetEl.id='decoPlanet';
+  area.appendChild(planetEl);
+
+  const nebula = document.createElement('div');
+  nebula.className='deco-nebula';
+  nebula.id='decoNebula';
+  area.appendChild(nebula);
+
+  const ship = document.createElement('div');
+  ship.className='deco-ship';
+  ship.id='decoShip';
+  ship.textContent='🛰️';
+  area.appendChild(ship);
+
+  const blackhole = document.createElement('div');
+  blackhole.className='deco-blackhole';
+  blackhole.id='decoBlackhole';
+  area.appendChild(blackhole);
+}
+
+function updateSpaceDecor(regionId){
+  const planet = document.getElementById('decoPlanet');
+  const nebula = document.getElementById('decoNebula');
+  const ship = document.getElementById('decoShip');
+  const blackhole = document.getElementById('decoBlackhole');
+  if(!planet) return;
+  const spaceRegions = ['moon_sea','mars_sea','jupiter_sea','saturn_sea','blackhole','deep_space_frontier'];
+  const isSpace = spaceRegions.includes(regionId);
+  planet.style.display = isSpace ? 'block' : 'none';
+  nebula.style.display = isSpace ? 'block' : 'none';
+  ship.style.display = isSpace ? 'block' : 'none';
+  blackhole.style.display = (regionId==='blackhole'||regionId==='deep_space_frontier') ? 'block' : 'none';
+  planet.className = 'deco-planet';
+  if(regionId==='mars_sea') planet.classList.add('planet-mars');
+  else if(regionId==='jupiter_sea') planet.classList.add('planet-jupiter');
+  else if(regionId==='saturn_sea') planet.classList.add('planet-saturn');
+  else planet.classList.add('planet-moon');
+}
+
+/* ============================================================
+   렌더링
+   ============================================================ */
+function renderAll(){
+  renderHeader();
+  renderLeftPanel();
+  renderTank();
+  renderRightPanel();
+  updateNavDots();
+}
+
+function renderHeader(){
+  document.getElementById('resCoin').textContent = Math.floor(STATE.coin).toLocaleString();
+  document.getElementById('resEvoStone').textContent = STATE.evoStone;
+  document.getElementById('resGene').textContent = STATE.gene;
+}
+
+function updateHeaderStats(){
+  document.getElementById('resCoin').textContent = Math.floor(STATE.coin).toLocaleString();
+}
+
+function renderTankIncomeBadge(){
+  const badge = document.getElementById('incomeRateBadge');
+  if(!badge) return;
+  const perSec = computeTotalIncomePerSecond(STATE);
+  badge.textContent = `⚡ 초당 🪙${perSec.toFixed(1)}`;
+}
+
+function renderLeftPanel(){
+  document.getElementById('statPop').textContent = `${STATE.fish.length} / ${STATE.capacity}`;
+  const region = REGIONS.find(r=>r.id===STATE.currentRegion);
+  document.getElementById('statRegion').textContent = region ? `${region.emoji} ${region.name}` : '-';
+  document.getElementById('statIncome').textContent = computeTotalIncomePerSecond(STATE).toFixed(1) + ' 🪙/초';
+  document.getElementById('statDex').textContent = `${Object.keys(STATE.dex).length} / ${Object.keys(SPECIES).length}`;
+
+  const quickList = document.getElementById('regionQuickList');
+  quickList.innerHTML = '';
+  STATE.unlockedRegions.forEach(rid=>{
+    const r = REGIONS.find(x=>x.id===rid);
+    if(!r) return;
+    const div = document.createElement('div');
+    div.className = 'region-item' + (STATE.currentRegion===rid ? ' active' : '');
+    div.innerHTML = `<span class="rname">${r.emoji} ${r.name}</span>`;
+    div.onclick = ()=>{ STATE.currentRegion = rid; renderAll(); };
+    quickList.appendChild(div);
+  });
+
+  const autoList = document.getElementById('autoStatusList');
+  const activeAutos = AUTOMATIONS.filter(a=>STATE.automations[a.id]);
+  if(activeAutos.length===0){
+    autoList.innerHTML = '아직 해금된 자동화가 없습니다.';
+  } else {
+    autoList.innerHTML = activeAutos.map(a=>`<div class="stat-row"><span>${a.name}</span><span class="v">ON</span></div>`).join('');
+  }
+
+  // 알 보관함 상태
+  const eggList = document.getElementById('eggStatusList');
+  if(eggList){
+    if(STATE.eggs.length === 0){
+      eggList.innerHTML = '보관 중인 알이 없습니다.';
+    } else {
+      eggList.innerHTML = STATE.eggs.slice(0,4).map(e=>{
+        const ready = e.isReady();
+        return `<div class="stat-row"><span>${e.def.emoji} ${e.def.name}</span><span class="v">${ready?'부화 가능':e.remainSec()+'s'}</span></div>`;
+      }).join('') + (STATE.eggs.length>4 ? `<div class="stat-row"><span>+${STATE.eggs.length-4}개 더보기</span><span class="v"></span></div>` : '');
+    }
+  }
+}
+
+function renderTank(){
+  const region = REGIONS.find(r=>r.id===STATE.currentRegion) || REGIONS[0];
+  document.getElementById('tankRegionLabel').textContent = `${region.emoji} ${region.name}`;
+  document.getElementById('feedStock').textContent = STATE.feedStock + (STATE.premiumFeedStock?` (+${STATE.premiumFeedStock}고급)`:'');
+
+  const bgLayer = document.getElementById('tankBgLayer');
+  bgLayer.className = 'tank-bg-layer';
+  if(['deep_sea','blackhole'].includes(region.id)) bgLayer.classList.add('region-deep');
+  else if(region.id==='volcano_sea' || region.id==='mars_sea') bgLayer.classList.add('region-volcano');
+  else if(region.id==='glacier_sea') bgLayer.classList.add('region-glacier');
+  else if(['moon_sea','jupiter_sea','saturn_sea','deep_space_frontier'].includes(region.id)) bgLayer.classList.add('region-space');
+
+  updateSpaceDecor(region.id);
+
+  const layer = document.getElementById('fishLayer');
+  const existingUids = new Set(STATE.fish.map(f=>f.uid));
+  Array.from(layer.children).forEach(child=>{
+    const uid = child.id.replace('sprite_','');
+    if(!existingUids.has(uid)) child.remove();
+  });
+  STATE.fish.forEach(f=>{
+    let el = document.getElementById('sprite_'+f.uid);
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'sprite_'+f.uid;
+      el.className = 'fish-sprite';
+      el.onclick = ()=>onFishClick(f.uid);
+      layer.appendChild(el);
+    }
+    const scale = f.stageInfo.scale;
+    const isGlow = ['epic','legend','myth','cosmic','trans','god'].includes(f.def.grade);
+    el.classList.toggle('glow-strong', isGlow);
+    el.style.color = f.grade.color;
+    el.style.left = f.x + '%';
+    el.style.top = f.y + '%';
+    el.innerHTML = `<div class="grade-glow"></div><span class="body-emoji" style="font-size:${28*scale}px;">${f.def.emoji}</span>`;
+  });
+
+  let exploreBadge = document.querySelector('#tankInfoTop .explore-badge');
+  if(STATE.exploring){
+    const remain = Math.max(0, Math.ceil((STATE.exploring.endsAt - Date.now())/1000));
+    if(!exploreBadge){
+      exploreBadge = document.createElement('div');
+      exploreBadge.className='badge explore-badge';
+      document.getElementById('tankInfoTop').appendChild(exploreBadge);
+    }
+    exploreBadge.textContent = `🚀 탐사 중... ${remain}s`;
+  } else if(exploreBadge){
+    exploreBadge.remove();
+  }
+}
+
+function renderRightPanel(){
+  const body = document.getElementById('fishListBody');
+  if(STATE.fish.length===0){
+    body.innerHTML = '<div class="empty-hint">보유한 물고기가 없습니다.</div>';
+    return;
+  }
+  body.innerHTML = '';
+  STATE.fish.forEach(f=>{
+    const card = document.createElement('div');
+    card.className = 'fish-card' + (selectedFishUid===f.uid ? ' selected':'');
+    const xpPct = Math.min(100, Math.round((f.xp/f.xpToNextLevel())*100));
+    card.innerHTML = `
+      <div class="fc-top">
+        <span class="fc-name">${f.def.emoji} ${f.def.name}</span>
+        <span class="fc-grade" style="background:${f.grade.color}22;color:${f.grade.color};border:1px solid ${f.grade.color}55;">${f.grade.name}</span>
+      </div>
+      <div class="fc-meta">
+        <span>Lv.${f.level}</span>
+        <span>${f.stageInfo.name}</span>
+        <span>${f.pers.emoji} ${f.pers.name}</span>
+      </div>
+      <div class="fc-bar-wrap"><div class="fc-bar" style="width:${xpPct}%;"></div></div>
+      <div class="fc-happy">행복도 ${Math.round(f.happiness)} · ⚡${f.incomePerSecond().toFixed(2)}/초 ${f.canEvolve()?' · ✦진화 가능':''}</div>
+    `;
+    card.onclick = ()=>openFishDetail(f.uid);
+    body.appendChild(card);
+  });
+}
+
+function onFishClick(uid){
+  openFishDetail(uid);
+}
+
+function openFishDetail(uid){
+  selectedFishUid = uid;
+  const f = STATE.fish.find(x=>x.uid===uid);
+  if(!f) return;
+  document.getElementById('fdName').textContent = `${f.def.emoji} ${f.def.name}`;
+  const xpPct = Math.min(100, Math.round((f.xp/f.xpToNextLevel())*100));
+  const body = document.getElementById('fishDetailBody');
+  body.innerHTML = `
+    <span class="detail-grade-tag" style="background:${f.grade.color}22;color:${f.grade.color};border:1px solid ${f.grade.color}55;">${f.grade.name}</span>
+    <span class="detail-pers-tag">${f.pers.emoji} ${f.pers.name}</span>
+    <div class="detail-stat"><span>성장 단계</span><span class="v">${f.stageInfo.name}</span></div>
+    <div class="detail-stat"><span>레벨</span><span class="v">Lv.${f.level} (${Math.floor(f.xp)}/${f.xpToNextLevel()} XP)</span></div>
+    <div class="detail-stat"><span>행복도</span><span class="v">${Math.round(f.happiness)} / 100</span></div>
+    <div class="detail-stat"><span>판매가</span><span class="v">🪙${f.sellPrice()}</span></div>
+    <div class="detail-stat"><span>초당 수익</span><span class="v">🪙${f.incomePerSecond().toFixed(2)}</span></div>
+    <div class="detail-stat"><span>성격 효과</span><span class="v" style="font-size:11px;text-align:right;">${f.pers.desc}</span></div>
+    <div class="detail-stat"><span>다음 진화</span><span class="v">${f.def.evolvesTo ? SPECIES[f.def.evolvesTo].name : '최종 진화'}</span></div>
+    ${f.def.skill ? `<div class="detail-skill">✦ 패시브: ${f.def.skill}</div>` : ''}
+    <div class="detail-actions">
+      <button class="btn primary full" onclick="feedFish('${f.uid}')">🍤 먹이주기 (일반)</button>
+      <button class="btn full" onclick="feedFish('${f.uid}', true)">🍤 먹이주기 (고급)</button>
+      <button class="btn full" onclick="selectForGeneLab('${f.uid}')">🧪 유전자 연구소로 보내기</button>
+      <button class="btn danger full" onclick="sellFish('${f.uid}')">💰 판매하기</button>
+    </div>
+  `;
+  openModal('fishdetail');
+}
+
+function selectForGeneLab(uid){
+  closeModal('fishdetail');
+  const f = STATE.fish.find(x=>x.uid===uid);
+  if(!f) return;
+  if(!geneSlotA) geneSlotA = f;
+  else if(!geneSlotB && f.uid!==geneSlotA.uid) geneSlotB = f;
+  openModal('genelab');
+  activeGeneTab = 'combine';
+  renderGeneLabModal();
+}
+
+/* ============================================================
+   모달 공용
+   ============================================================ */
+function openModal(name){
+  document.getElementById('modal-'+name).classList.add('open');
+  if(name==='shop') renderShopModal();
+  if(name==='explore') renderExploreModal();
+  if(name==='genelab') renderGeneLabModal();
+  if(name==='dex') renderDexModal();
+  if(name==='quest') renderQuestModal();
+  if(name==='achievement') renderAchievementModal();
+  if(name==='egg') renderEggModal();
+  if(name==='planet') renderPlanetModal();
+}
+function closeModal(name){
+  document.getElementById('modal-'+name).classList.remove('open');
+}
+
+/* ---------- 상점 모달 ---------- */
+function renderShopModal(){
+  const content = document.getElementById('shopContent');
+  if(activeShopTab==='fish'){
+    content.innerHTML = '<div class="grid-cards">' + SHOP_FISH.map(item=>{
+      const sp = SPECIES[item.species];
+      const g = gradeInfo(sp.grade);
+      return `<div class="shop-item">
+        <div style="font-size:30px;text-align:center;">${sp.emoji}</div>
+        <div class="si-name" style="color:${g.color};">${sp.name}</div>
+        <div class="si-desc">등급: ${g.name}</div>
+        <div class="si-price">🪙 ${item.price}</div>
+        <button class="btn primary small full" onclick="buyFish('${item.species}', ${item.price})">구매</button>
+      </div>`;
+    }).join('') + '</div>';
+  } else if(activeShopTab==='item'){
+    content.innerHTML = '<div class="grid-cards">' + SHOP_ITEMS.map(item=>`
+      <div class="shop-item">
+        <div class="si-name">${item.name}</div>
+        <div class="si-desc">${item.desc}</div>
+        <div class="si-price">🪙 ${item.price}</div>
+        <button class="btn primary small full" onclick="buyItem('${item.id}')">구매</button>
+      </div>
+    `).join('') + '</div>';
+  } else if(activeShopTab==='expand'){
+    const usedCount = STATE._expandBought || 0;
+    content.innerHTML = '<div class="grid-cards">' + SHOP_EXPAND.map((e,idx)=>{
+      const bought = idx < usedCount;
+      return `<div class="shop-item">
+        <div class="si-name">+${e.addCapacity} 수용량</div>
+        <div class="si-desc">수족관 최대 보유 마리수를 늘립니다.</div>
+        <div class="si-price">🪙 ${e.price}</div>
+        <button class="btn primary small full" ${bought?'disabled':''} onclick="buyExpand(${idx})">${bought?'완료':'구매'}</button>
+      </div>`;
+    }).join('') + '</div>';
+  } else if(activeShopTab==='auto'){
+    content.innerHTML = '<div class="grid-cards">' + AUTOMATIONS.map(a=>{
+      const owned = !!STATE.automations[a.id];
+      return `<div class="shop-item">
+        <div class="si-name">${a.name}</div>
+        <div class="si-desc">${a.desc}</div>
+        <div class="si-price">🪙 ${a.price}</div>
+        <button class="btn primary small full" ${owned?'disabled':''} onclick="buyAutomation('${a.id}', ${a.price})">${owned?'설치 완료':'구매'}</button>
+      </div>`;
+    }).join('') + '</div>';
+  }
+}
+
+function buyFish(speciesId, price){
+  if(STATE.coin < price){ queueToast('코인이 부족합니다.', 'warn'); return; }
+  if(STATE.fish.length >= STATE.capacity){ queueToast('수족관이 가득 찼습니다.', 'warn'); return; }
+  STATE.coin -= price;
+  addFish(speciesId);
+  queueToast(`${SPECIES[speciesId].name}을 구매했습니다.`, '');
+  renderAll(); renderShopModal();
+}
+
+function buyItem(itemId){
+  const item = SHOP_ITEMS.find(i=>i.id===itemId);
+  if(!item) return;
+  if(STATE.coin < item.price){ queueToast('코인이 부족합니다.', 'warn'); return; }
+  STATE.coin -= item.price;
+  const eff = item.effect;
+  if(eff.type==='feed') STATE.feedStock += eff.amount;
+  if(eff.type==='feedPremium') STATE.premiumFeedStock += eff.amount;
+  if(eff.type==='evoStone') STATE.evoStone += eff.amount;
+  if(eff.type==='happyAll') STATE.fish.forEach(f=>f.happiness=Math.min(100,f.happiness+eff.amount));
+  if(eff.type==='buyEgg'){
+    STATE.eggs.push(new EggInstance(eff.eggId, {}));
+  }
+  queueToast(`${item.name} 구매 완료!`, '');
+  renderAll(); renderShopModal();
+}
+
+function buyExpand(idx){
+  const usedCount = STATE._expandBought || 0;
+  if(idx !== usedCount) return;
+  const e = SHOP_EXPAND[idx];
+  if(STATE.coin < e.price){ queueToast('코인이 부족합니다.', 'warn'); return; }
+  STATE.coin -= e.price;
+  STATE.capacity += e.addCapacity;
+  STATE._expandBought = usedCount+1;
+  queueToast(`수족관 수용량이 +${e.addCapacity} 확장되었습니다!`, 'discover');
+  renderAll(); renderShopModal();
+}
+
+function buyAutomation(autoId, price){
+  if(STATE.automations[autoId]){ return; }
+  if(STATE.coin < price){ queueToast('코인이 부족합니다.', 'warn'); return; }
+  STATE.coin -= price;
+  STATE.automations[autoId] = true;
+  STATE.lastAutoTick[autoId] = Date.now();
+  queueToast(`${AUTOMATIONS.find(a=>a.id===autoId).name}이 설치되었습니다!`, 'discover');
+  renderAll(); renderShopModal();
+}
+
+document.addEventListener('click', (e)=>{
+  const tab = e.target.closest('[data-shoptab]');
+  if(tab){
+    document.querySelectorAll('#shopTabs .tab-chip').forEach(c=>c.classList.remove('active'));
+    tab.classList.add('active');
+    activeShopTab = tab.dataset.shoptab;
+    renderShopModal();
+  }
+  const gtab = e.target.closest('[data-genetab]');
+  if(gtab){
+    document.querySelectorAll('#geneTabs .tab-chip').forEach(c=>c.classList.remove('active'));
+    gtab.classList.add('active');
+    activeGeneTab = gtab.dataset.genetab;
+    renderGeneLabModal();
+  }
+});
+
+/* ---------- 탐사 모달 ---------- */
+function renderExploreModal(){
+  const content = document.getElementById('exploreContent');
+  content.innerHTML = REGIONS.map(r=>{
+    const unlocked = STATE.unlockedRegions.includes(r.id);
+    const isExploringHere = STATE.exploring && STATE.exploring.regionId===r.id;
+    const speciesLabel = r.isProcedural ? '미지의 생명체 (절차적 생성)' : (r.species.map(s=>SPECIES[s].name).join(', ')||'-');
+    return `<div class="region-card ${unlocked?'':'locked'}">
+      <div>
+        <div class="rc-name">${r.emoji} ${r.name} ${unlocked?'':'🔒'}</div>
+        <div class="rc-desc">${r.desc}</div>
+        <div class="rc-desc">서식 어종: ${speciesLabel}</div>
+      </div>
+      <div class="rc-right">
+        ${unlocked ? `
+          <span style="font-size:11px;color:var(--text-low);">탐사비 🪙${r.exploreCost} · ${r.exploreTime}s</span>
+          <button class="btn primary small" ${STATE.exploring?'disabled':''} onclick="startExploration('${r.id}')">${isExploringHere?'탐사 중...':'탐사 시작'}</button>
+        ` : `
+          <span style="font-size:11px;color:var(--accent-gold);">해금비용 🪙${r.unlockCost}</span>
+          <button class="btn gold small" onclick="unlockRegion('${r.id}')">해금하기</button>
+        `}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- 유전자 연구소 모달 (확장: 조합/분해/돌연변이/신종창조) ---------- */
+function renderGeneLabModal(){
+  const content = document.getElementById('genelabContent');
+  if(activeGeneTab === 'combine') return renderGeneCombineTab(content);
+  if(activeGeneTab === 'dismantle') return renderGeneDismantleTab(content);
+  if(activeGeneTab === 'mutation') return renderGeneMutationTab(content);
+  if(activeGeneTab === 'newborn') return renderGeneNewbornTab(content);
+}
+
+function renderGeneCombineTab(content){
+  const slotHtml = (slot, label)=>{
+    if(!slot) return `<div class="gene-slot">${label}<br><span style="font-size:11px;">아래 목록에서 물고기 선택</span></div>`;
+    const sp = SPECIES[slot.species];
+    return `<div class="gene-slot filled"><span class="gs-emoji">${sp.emoji}</span>${sp.name}</div>`;
+  };
+  content.innerHTML = `
+    <p style="font-size:12px;color:var(--text-mid);margin-bottom:14px;">두 마리의 물고기를 조합해 새로운 어종을 만들어보세요. 유전자 샘플 30개가 소모되며, 조합에 사용된 물고기는 사라집니다.</p>
+    <div class="gene-lab-grid">
+      ${slotHtml(geneSlotA,'슬롯 A')}
+      <div style="font-size:24px;text-align:center;">+</div>
+      ${slotHtml(geneSlotB,'슬롯 B')}
+    </div>
+    <div style="text-align:center;margin-bottom:14px;color:var(--accent-cyan);font-family:var(--font-mono);font-size:13px;">필요 유전자 샘플: 30 / 보유: ${STATE.gene}</div>
+    <button class="btn primary full" onclick="tryGeneCombine()">🧬 조합 실행</button>
+    <button class="btn full" style="margin-top:8px;" onclick="clearGeneSlots()">슬롯 비우기</button>
+    <div class="section-label" style="margin-top:18px;">보유 물고기에서 선택</div>
+    <div class="grid-cards">
+      ${STATE.fish.map(f=>`<div class="shop-item" style="cursor:pointer;" onclick="pickGeneSlotFish('${f.uid}')">
+        <div style="font-size:26px;text-align:center;">${f.def.emoji}</div>
+        <div class="si-name" style="text-align:center;font-size:12px;">${f.def.name}</div>
+      </div>`).join('')}
+    </div>
+  `;
+}
+
+function renderGeneDismantleTab(content){
+  content.innerHTML = `
+    <p style="font-size:12px;color:var(--text-mid);margin-bottom:14px;">물고기를 분해하여 유전자 샘플을 추출합니다. 등급과 레벨이 높을수록 더 많은 샘플을 얻습니다. (최소 1마리는 보유해야 합니다)</p>
+    <div class="grid-cards">
+      ${STATE.fish.map(f=>{
+        const gIdx = gradeIndex(f.def.grade);
+        const expected = 4 + gIdx*5 + Math.floor(f.level*0.5);
+        return `<div class="shop-item">
+          <div style="font-size:26px;text-align:center;">${f.def.emoji}</div>
+          <div class="si-name" style="text-align:center;font-size:12px;color:${f.grade.color};">${f.def.name} Lv.${f.level}</div>
+          <div class="si-desc" style="text-align:center;">예상 획득: 🧬${expected}</div>
+          <button class="btn danger small full" onclick="confirmDismantle('${f.uid}')">분해하기</button>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+function confirmDismantle(uid){
+  const f = STATE.fish.find(x=>x.uid===uid);
+  if(!f) return;
+  if(confirm(`${f.def.name}을 분해하여 유전자 샘플로 만듭니다. 되돌릴 수 없습니다. 계속하시겠습니까?`)){
+    dismantleFish(uid);
+  }
+}
+
+function renderGeneMutationTab(content){
+  content.innerHTML = `
+    <p style="font-size:12px;color:var(--text-mid);margin-bottom:14px;">돌연변이 연구를 진행해 무작위 물고기에게 특별한 효과를 부여합니다. 결과는 무작위입니다.</p>
+    <div style="text-align:center;margin-bottom:14px;color:var(--accent-violet);font-family:var(--font-mono);font-size:13px;">
+      필요 자원: 🧬${MUTATION_COST_GENE} · 🪙${MUTATION_COST_COIN}<br>
+      보유: 🧬${STATE.gene} · 🪙${Math.floor(STATE.coin)}
+    </div>
+    <button class="btn primary full" onclick="tryMutationResearch()">🧪 돌연변이 연구 실행</button>
+    <div class="section-label" style="margin-top:16px;">가능한 결과</div>
+    <div class="stat-row"><span>레벨 +1~3 상승</span><span class="v">50%</span></div>
+    <div class="stat-row"><span>행복도 회복 + 진화석 +2</span><span class="v">35%</span></div>
+    <div class="stat-row"><span>대성공: 레벨 +5 급성장</span><span class="v">15%</span></div>
+  `;
+}
+
+function renderGeneNewbornTab(content){
+  content.innerHTML = `
+    <p style="font-size:12px;color:var(--text-mid);margin-bottom:14px;">신종 창조는 도감에 없는 완전히 새로운 어종을 탄생시킵니다. 등급은 무작위로 결정되며, 매우 드물게 고등급 신종이 탄생할 수 있습니다.</p>
+    <div style="text-align:center;margin-bottom:14px;color:var(--accent-gold);font-family:var(--font-mono);font-size:13px;">
+      필요 자원: 🧬${NEWBORN_COST_GENE} · 💎${NEWBORN_COST_EVOSTONE}<br>
+      보유: 🧬${STATE.gene} · 💎${STATE.evoStone}
+    </div>
+    <button class="btn gold full" onclick="tryCreateNewborn()">✨ 신종 창조 실행</button>
+    <div class="section-label" style="margin-top:16px;">참고</div>
+    <p style="font-size:11.5px;color:var(--text-low);">신종 창조로 만들어진 어종은 도감에 새 항목으로 등록되며, 장기 플레이를 위한 도감 확장 콘텐츠입니다. 누적 창조 횟수: ${STATE.stats.totalNewborn}</p>
+  `;
+}
+
+function pickGeneSlotFish(uid){
+  const f = STATE.fish.find(x=>x.uid===uid);
+  if(!f) return;
+  if(geneSlotA && geneSlotA.uid===f.uid){ geneSlotA=null; renderGeneLabModal(); return; }
+  if(geneSlotB && geneSlotB.uid===f.uid){ geneSlotB=null; renderGeneLabModal(); return; }
+  if(!geneSlotA) geneSlotA = f;
+  else if(!geneSlotB) geneSlotB = f;
+  else queueToast('슬롯이 이미 가득 찼습니다.', 'warn');
+  renderGeneLabModal();
+}
+function clearGeneSlots(){ geneSlotA=null; geneSlotB=null; renderGeneLabModal(); }
+
+/* ---------- 알 모달 ---------- */
+function renderEggModal(){
+  const content = document.getElementById('eggContent');
+  if(STATE.eggs.length === 0){
+    content.innerHTML = '<p style="color:var(--text-mid);font-size:12.5px;">보관 중인 알이 없습니다. 탐사를 통해 알을 획득하세요.</p>';
+    return;
+  }
+  content.innerHTML = '<div class="grid-cards">' + STATE.eggs.map(e=>{
+    const ready = e.isReady();
+    return `<div class="shop-item">
+      <div style="font-size:30px;text-align:center;">${e.def.emoji}</div>
+      <div class="si-name" style="text-align:center;">${e.def.name}</div>
+      <div class="si-desc" style="text-align:center;">${ready ? '부화 가능!' : `남은 시간: ${e.remainSec()}초`}</div>
+      ${ready ? `<button class="btn primary small full" onclick="hatchEgg('${e.uid}', true)">🐣 부화시키기</button>`
+               : `<button class="btn gold small full" onclick="hatchEggInstant('${e.uid}')">💎 진화석 2개로 즉시부화</button>`}
+    </div>`;
+  }).join('') + '</div>';
+}
+
+/* ---------- 행성 개척 모달 ---------- */
+function renderPlanetModal(){
+  const content = document.getElementById('planetContent');
+  content.innerHTML = `<p style="font-size:12px;color:var(--text-mid);margin-bottom:14px;">코인을 투입해 행성을 개척하면 영구적인 패시브 보너스를 얻습니다. 레벨이 오를수록 비용이 상승하지만 보너스도 계속 누적됩니다.</p>` +
+  '<div class="grid-cards">' + PLANETS.map(p=>{
+    const lvl = STATE.planets[p.id] || 0;
+    const cost = planetCost(p, lvl);
+    const totalBonus = (lvl * p.bonusPerLevel * 100).toFixed(1);
+    return `<div class="shop-item">
+      <div style="font-size:30px;text-align:center;">${p.emoji}</div>
+      <div class="si-name" style="text-align:center;">${p.name} <span style="color:var(--accent-cyan);">Lv.${lvl}</span></div>
+      <div class="si-desc">${p.desc}</div>
+      <div class="si-desc">현재 누적 보너스: +${totalBonus}%</div>
+      <div class="si-price">🪙 ${cost.toLocaleString()}</div>
+      <button class="btn primary small full" onclick="upgradePlanet('${p.id}')">개척하기</button>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function upgradePlanet(planetId){
+  const p = PLANETS.find(x=>x.id===planetId);
+  if(!p) return;
+  const lvl = STATE.planets[planetId] || 0;
+  const cost = planetCost(p, lvl);
+  if(STATE.coin < cost){ queueToast('코인이 부족합니다.', 'warn'); return; }
+  STATE.coin -= cost;
+  STATE.planets[planetId] = lvl+1;
+  queueToast(`${p.name} 개척 레벨이 ${lvl+1}로 상승했습니다!`, 'discover');
+  renderAll();
+  renderPlanetModal();
+}
+
+/* ---------- 도감 모달 ---------- */
+function renderDexModal(){
+  const content = document.getElementById('dexContent');
+  const allIds = Object.keys(SPECIES);
+  content.innerHTML = `<p style="font-size:12px;color:var(--text-mid);margin-bottom:12px;">발견 진행률: ${Object.keys(STATE.dex).length} / ${allIds.length} (탐사·부화·신종창조를 통해 계속 확장됩니다)</p>
+  <div class="grid-cards">` + allIds.map(id=>{
+    const sp = SPECIES[id];
+    const found = !!STATE.dex[id];
+    const g = gradeInfo(sp.grade);
+    return `<div class="dex-item ${found?'':'locked'}" style="${found?`border-color:${g.color}55;`:''}">
+      <span class="dex-emoji">${found ? sp.emoji : '❔'}</span>
+      <span style="color:${found?g.color:'inherit'};">${found ? sp.name : '???'}</span>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+/* ---------- 퀘스트 모달 ---------- */
+function renderQuestModal(){
+  const content = document.getElementById('questContent');
+  if(STATE.quests.length===0){ content.innerHTML='<p style="color:var(--text-mid);">오늘의 퀘스트가 아직 생성되지 않았습니다.</p>'; return; }
+  content.innerHTML = STATE.quests.map(q=>{
+    const done = q.progress>=q.target;
+    const rewardStr = Object.entries(q.reward).map(([k,v])=>{
+      if(k==='coin') return `🪙${v}`;
+      if(k==='gene') return `🧬${v}`;
+      if(k==='evoStone') return `💎${v}`;
+      return '';
+    }).join(' ');
+    return `<div class="quest-item ${q.claimed?'done':''}">
+      <div>
+        <div class="qi-name">${q.name}</div>
+        <div class="qi-desc">${q.desc}</div>
+        <div class="qi-progress">${q.progress} / ${q.target} · 보상: ${rewardStr}</div>
+      </div>
+      <button class="btn small ${done&&!q.claimed?'primary':''}" ${(!done||q.claimed)?'disabled':''} onclick="claimQuest('${q.id}')">${q.claimed?'완료':'받기'}</button>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- 업적 모달 ---------- */
+function renderAchievementModal(){
+  const content = document.getElementById('achievementContent');
+  content.innerHTML = ACHIEVEMENT_LIST.map(a=>{
+    const done = !!STATE.achievementsDone[a.id];
+    const rewardStr = Object.entries(a.reward).map(([k,v])=>{
+      if(k==='coin') return `🪙${v}`;
+      if(k==='evoStone') return `💎${v}`;
+      return '';
+    }).join(' ');
+    return `<div class="achievement-item ${done?'done':''}">
+      <div>
+        <div class="qi-name">${done?'🏆':'🔒'} ${a.name}</div>
+        <div class="qi-desc">${a.desc}</div>
+        <div class="qi-progress">보상: ${rewardStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   이벤트 바인딩
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', ()=>{
+  initGame();
+
+  document.getElementById('btnFeedAll').onclick = ()=>feedAllFish(false);
+  document.getElementById('btnExploreShortcut').onclick = ()=>openModal('explore');
+  document.getElementById('btnShopShortcut').onclick = ()=>openModal('shop');
+  document.getElementById('btnSettings').onclick = ()=>openModal('settings');
+
+  document.querySelectorAll('.nav-btn').forEach(btn=>{
+    btn.onclick = ()=>openModal(btn.dataset.modal);
+  });
+  document.querySelectorAll('.modal-close').forEach(btn=>{
+    btn.onclick = ()=>closeModal(btn.dataset.close);
+  });
+  document.querySelectorAll('.modal-overlay').forEach(ov=>{
+    ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('open'); });
+  });
+
+  document.getElementById('btnManualSave').onclick = ()=>{
+    saveGame(STATE);
+    queueToast('게임이 저장되었습니다.', '');
+  };
+  document.getElementById('btnExportSave').onclick = ()=>{
+    const data = serializeState(STATE);
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'cosmic_aquarium_save.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  document.getElementById('btnResetGame').onclick = ()=>{
+    if(confirm('정말 게임을 초기화하시겠습니까? 모든 진행 상황이 삭제됩니다.')){
+      resetGame();
+      STATE = new GameState();
+      ensureDailyQuests();
+      document.getElementById('fishLayer').innerHTML='';
+      renderAll();
+      renderMainQuestBanner();
+      closeModal('settings');
+      queueToast('게임이 초기화되었습니다.', '');
+    }
+  };
+
+  window.addEventListener('beforeunload', ()=>{ saveGame(STATE); });
+});
+
+</script>
+</body>
+</html>
