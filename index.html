@@ -116,16 +116,69 @@ html,body{
 
 /* 메인 퀘스트 배너 */
 #mainQuestBanner{
-  display:flex;align-items:center;gap:10px;
-  padding:8px 16px;
-  background:linear-gradient(90deg, rgba(255,206,84,0.12), rgba(155,107,255,0.08));
+  display:flex;align-items:flex-start;gap:10px;
+  padding:9px 16px;
+  background:linear-gradient(90deg, rgba(255,206,84,0.14), rgba(155,107,255,0.1));
   border-bottom:1px solid var(--line);
   z-index:4;flex-shrink:0;
 }
-#mainQuestBanner .mq-ic{font-size:20px;flex-shrink:0;}
-#mainQuestBanner .mq-text{min-width:0;}
-#mainQuestBanner .mq-title{font-size:12.5px;font-weight:700;color:var(--accent-gold);}
-#mainQuestBanner .mq-desc{font-size:11px;color:var(--text-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#mainQuestBanner .mq-ic{font-size:20px;flex-shrink:0;margin-top:2px;}
+#mainQuestBanner .mq-text{min-width:0;flex:1;}
+#mainQuestBanner .mq-toprow{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+#mainQuestBanner .mq-title{font-size:12.5px;font-weight:800;color:var(--accent-gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#mainQuestBanner .mq-stepcount{font-size:10px;color:var(--text-low);flex-shrink:0;background:rgba(255,255,255,0.07);padding:1px 7px;border-radius:999px;}
+#mainQuestBanner .mq-desc{font-size:11px;color:var(--text-mid);margin-top:1px;}
+#mainQuestBanner .mq-progrow{display:flex;align-items:center;gap:8px;margin-top:5px;}
+#mainQuestBanner .mq-progbar{flex:1;height:6px;background:rgba(0,0,0,0.3);border-radius:4px;overflow:hidden;}
+#mainQuestBanner .mq-progfill{height:100%;background:linear-gradient(90deg,var(--accent-gold),var(--accent-cyan));border-radius:4px;transition:width .3s;}
+#mainQuestBanner .mq-progtext{font-size:10px;color:var(--text-mid);flex-shrink:0;}
+#mainQuestBanner .mq-rewardrow{font-size:10.5px;color:var(--accent-gold);margin-top:3px;}
+#mainQuestBanner .mq-ready{color:var(--accent-cyan);margin-left:4px;}
+#mainQuestBanner .mq-hint{font-size:10.5px;color:var(--text-low);margin-top:4px;line-height:1.4;background:rgba(255,255,255,0.04);padding:4px 8px;border-radius:6px;}
+
+/* 랜덤 이벤트 오브젝트 */
+.event-object{
+  position:absolute;font-size:30px;cursor:pointer;z-index:8;
+  transform:translate(-50%,-50%);
+  animation:eventBob 1.6s ease-in-out infinite, eventGlow 1.2s ease-in-out infinite;
+  filter:drop-shadow(0 0 10px var(--accent-gold));
+  pointer-events:auto;
+}
+.event-object:active{transform:translate(-50%,-50%) scale(0.85);}
+@keyframes eventBob{0%,100%{margin-top:0;}50%{margin-top:-8px;}}
+@keyframes eventGlow{0%,100%{filter:drop-shadow(0 0 8px var(--accent-gold));}50%{filter:drop-shadow(0 0 18px var(--accent-cyan));}}
+.event-rarefish{animation:eventBob 0.8s ease-in-out infinite, eventGlow 0.6s ease-in-out infinite;font-size:34px;}
+
+/* 가이드 모달 */
+.guide-intro{font-size:13px;font-weight:700;color:var(--accent-cyan);background:rgba(79,216,255,0.1);padding:10px 12px;border-radius:10px;margin-bottom:12px;}
+.guide-steps{margin:0 0 8px 0;padding-left:20px;font-size:12px;color:var(--text-mid);line-height:1.9;}
+.guide-steps b{color:var(--text-high);}
+.guide-card{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+.guide-card-head{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-high);margin-bottom:4px;}
+.guide-ic{font-size:18px;}
+.guide-card-body{font-size:11.5px;color:var(--text-mid);line-height:1.6;}
+
+/* 장기 목표 모달 */
+.goal-item{margin-bottom:12px;}
+.goal-item.done .goal-fill{background:linear-gradient(90deg,#5dffb0,#4fd8ff);}
+.goal-head{display:flex;justify-content:space-between;font-size:12px;color:var(--text-high);margin-bottom:4px;}
+.goal-num{color:var(--text-mid);font-size:11px;}
+.goal-bar{height:8px;background:rgba(255,255,255,0.07);border-radius:5px;overflow:hidden;}
+.goal-fill{height:100%;background:linear-gradient(90deg,var(--accent-gold),var(--accent-violet));border-radius:5px;transition:width .4s;}
+
+/* 탐사 로그 */
+#exploreLogList .log-row{font-size:10.5px;color:var(--text-mid);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);line-height:1.4;}
+
+/* 자동화 토글 행 */
+.auto-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
+.auto-name{font-size:11.5px;color:var(--text-mid);}
+.auto-toggle{font-size:10px;font-weight:800;padding:3px 12px;border-radius:999px;border:none;cursor:pointer;}
+.auto-toggle.on{background:var(--accent-cyan);color:#012;}
+.auto-toggle.off{background:rgba(255,255,255,0.12);color:var(--text-low);}
+
+/* 장식 배치 모드 강조 */
+body.decor-edit .decor-item{cursor:grab;outline:2px dashed var(--accent-gold);border-radius:6px;}
+body.decor-edit .decor-item:active{cursor:grabbing;}
 
 #resourceBar{
   display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;
@@ -371,10 +424,14 @@ body.three-active #foodLayer{z-index:6;}
 .food-pellet.premium{font-size:17px;filter:drop-shadow(0 0 5px rgba(255,122,181,0.9));}
 @keyframes foodSpawn{0%{transform:translate(-50%,-50%) scale(0.2);opacity:0;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
 
-/* 장식품 바닥 표시 (시스템 8) */
-#decorLayer{position:absolute;left:0;right:0;bottom:0;height:42px;z-index:2;pointer-events:none;}
-.decor-item{position:absolute;bottom:2px;font-size:26px;opacity:0.9;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));animation:decorSway 4s ease-in-out infinite;}
-@keyframes decorSway{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+/* 장식품 표시 (시스템 8) */
+#decorLayer{position:absolute;inset:0;z-index:2;pointer-events:none;}
+body.three-active #decorLayer{z-index:5;}
+.decor-item{position:absolute;font-size:28px;transform:translate(-50%,-50%);opacity:0.92;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));animation:decorSway 4s ease-in-out infinite;}
+.decor-item.editable{pointer-events:auto;cursor:grab;outline:2px dashed var(--accent-cyan);outline-offset:3px;border-radius:8px;animation:none;}
+.decor-item.editable:active{cursor:grabbing;}
+body.decor-edit #decorLayer{pointer-events:auto;}
+@keyframes decorSway{0%,100%{transform:translate(-50%,-50%) rotate(-3deg);}50%{transform:translate(-50%,-50%) rotate(3deg);}}
 
 /* 개체값(IV) 막대 (시스템 3) */
 .iv-block{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;}
@@ -742,6 +799,7 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
       <div class="res-chip coin"><span class="ic">🪙</span><span class="val" id="resCoin">0</span></div>
       <div class="res-chip stone"><span class="ic">💎</span><span class="val" id="resEvoStone">0</span></div>
       <div class="res-chip gene"><span class="ic">🧬</span><span class="val" id="resGene">0</span></div>
+      <button class="btn small" id="btnGuide" data-modal="guide" title="도움말">❓</button>
       <button class="btn small" id="btnSettings">⚙</button>
     </div>
   </div>
@@ -769,6 +827,9 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
 
         <div class="section-label">🥚 알 보관함</div>
         <div id="eggStatusList" style="font-size:11.5px;color:var(--text-low);">보관 중인 알이 없습니다.</div>
+
+        <div class="section-label">📡 탐사 로그</div>
+        <div id="exploreLogList" style="font-size:11px;color:var(--text-low);">탐사 기록이 여기에 표시됩니다.</div>
       </div>
     </div>
 
@@ -790,6 +851,7 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
           <div class="badge">먹이 통: <span id="feedStock">0</span>개</div>
           <div class="badge" id="incomeRateBadge">⚡ 초당 🪙0</div>
           <div class="badge">화면을 탭해 먹이 뿌리기 🍤</div>
+          <div class="badge" id="eventHint" style="display:none;background:rgba(255,206,84,0.2);border-color:var(--accent-gold);"></div>
         </div>
         <div id="tankToolbar">
           <button class="btn primary" id="btnFeedAll">🍤 모두에게 먹이주기</button>
@@ -820,6 +882,7 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
     <button class="nav-btn" data-modal="decor"><span class="nav-ic">🪸</span>꾸미기</button>
     <button class="nav-btn" data-modal="dex"><span class="nav-ic">📖</span>도감</button>
     <button class="nav-btn" data-modal="quest"><span class="nav-ic">📋</span>퀘스트<span class="nav-dot" id="questDot"></span></button>
+    <button class="nav-btn" data-modal="goals"><span class="nav-ic">🎯</span>목표</button>
     <button class="nav-btn" data-modal="achievement"><span class="nav-ic">🏆</span>업적<span class="nav-dot" id="achDot"></span></button>
   </div>
 
@@ -870,6 +933,22 @@ button:focus-visible, .region-item:focus-visible, .fish-card:focus-visible{
   <div class="modal-box">
     <div class="modal-head"><h2>🪸 수족관 꾸미기</h2><button class="modal-close" data-close="decor">✕</button></div>
     <div class="modal-body" id="decorContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 게임 가이드 -->
+<div class="modal-overlay" id="modal-guide">
+  <div class="modal-box">
+    <div class="modal-head"><h2>❓ 게임 가이드</h2><button class="modal-close" data-close="guide">✕</button></div>
+    <div class="modal-body" id="guideContent"></div>
+  </div>
+</div>
+
+<!-- 모달: 장기 목표 -->
+<div class="modal-overlay" id="modal-goals">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🎯 장기 목표</h2><button class="modal-close" data-close="goals">✕</button></div>
+    <div class="modal-body" id="goalsContent"></div>
   </div>
 </div>
 
@@ -1297,31 +1376,49 @@ const AUTOMATIONS = [
   { id:'auto_drone', name:'자동 탐사 드론', desc:'해금된 지역을 자동으로 주기적으로 탐사합니다.', price:4500, interval:60 },
 ];
 
-/* ---------- 메인 퀘스트 라인 (항상 다음 목표 표시) ---------- */
+/* ---------- 메인 퀘스트 라인 (항상 다음 목표 표시) ----------
+   각 퀘스트에 prog(s)=>[현재값, 목표값] 를 추가해 진행도 바를 표시한다.
+   초반 퀘스트는 튜토리얼 역할을 하도록 친절한 설명/힌트(hint)를 포함한다.
+*/
 const MAIN_QUEST_LINE = [
-  { id:'mq1', name:'첫 걸음', desc:'물고기를 3마리로 늘리세요.', check:s=>s.fish.length>=3, reward:{coin:80} },
-  { id:'mq2', name:'먹이는 사랑', desc:'먹이주기를 15회 수행하세요.', check:s=>s.stats.totalFeed>=15, reward:{coin:120, feed:5} },
-  { id:'mq3', name:'첫 진화', desc:'물고기를 1회 진화시키세요.', check:s=>s.stats.totalEvolves>=1, reward:{coin:200, evoStone:2} },
-  { id:'mq4', name:'산호 해역 진출', desc:'산호 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('coral_reef'), reward:{coin:150} },
-  { id:'mq5', name:'알을 품다', desc:'알을 1개 부화시키세요.', check:s=>s.stats.totalHatched>=1, reward:{coin:250, gene:5} },
-  { id:'mq6', name:'수족관 확장', desc:'수족관 수용량을 15 이상으로 확장하세요.', check:s=>s.capacity>=15, reward:{coin:300} },
-  { id:'mq7', name:'유전자 연구 시작', desc:'유전자 조합을 1회 실행하세요.', check:s=>s.stats.totalGeneCombine>=1, reward:{coin:350, evoStone:3} },
-  { id:'mq8', name:'자동화의 시작', desc:'자동화 장비를 1개 이상 설치하세요.', check:s=>Object.values(s.automations).some(v=>v), reward:{coin:400} },
-  { id:'mq9', name:'심해 탐사', desc:'심해 지역을 해금하세요.', check:s=>s.unlockedRegions.includes('deep_sea'), reward:{coin:500} },
-  { id:'mq10', name:'도감 수집가', desc:'도감에 15종을 등록하세요.', check:s=>Object.keys(s.dex).length>=15, reward:{coin:600, evoStone:4} },
-  { id:'mq11', name:'우주 진출', desc:'달 바다 지역을 해금하세요.', check:s=>s.unlockedRegions.includes('moon_sea'), reward:{coin:1000} },
-  { id:'mq12', name:'분해 연구', desc:'물고기를 1회 분해하여 유전자를 추출하세요.', check:s=>s.stats.totalDismantle>=1, reward:{coin:600, gene:8} },
-  { id:'mq13', name:'돌연변이 연구', desc:'돌연변이 연구를 1회 수행하세요.', check:s=>s.stats.totalMutation>=1, reward:{coin:800, evoStone:5} },
-  { id:'mq14', name:'신종 창조', desc:'신종 창조를 1회 수행하세요.', check:s=>s.stats.totalNewborn>=1, reward:{coin:1200, gene:10} },
-  { id:'mq15', name:'행성 개척', desc:'행성을 1회 이상 개척하세요.', check:s=>Object.values(s.planets||{}).some(v=>v>=1), reward:{coin:1500} },
-  { id:'mq16', name:'화성 정복', desc:'화성 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('mars_sea'), reward:{coin:2000} },
-  { id:'mq17', name:'전설의 수집가', desc:'전설 등급 이상 물고기 3마리를 보유하세요.', check:s=>s.fish.filter(f=>gradeIndex(SPECIES[f.species].grade)>=4).length>=3, reward:{coin:2500, evoStone:8} },
-  { id:'mq18', name:'목성의 폭풍', desc:'목성 폭풍 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('jupiter_sea'), reward:{coin:3500} },
-  { id:'mq19', name:'토성의 고리', desc:'토성 고리 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('saturn_sea'), reward:{coin:5000} },
-  { id:'mq20', name:'심연의 문턱', desc:'블랙홀 심연 지역을 해금하세요.', check:s=>s.unlockedRegions.includes('blackhole'), reward:{coin:8000, evoStone:15} },
-  { id:'mq21', name:'신급 탄생', desc:'신급 등급 물고기를 보유하세요.', check:s=>s.fish.some(f=>SPECIES[f.species] && SPECIES[f.species].grade==='god'), reward:{coin:15000} },
-  { id:'mq22', name:'무한의 문', desc:'심우주 개척지를 해금하세요.', check:s=>s.unlockedRegions.includes('deep_space_frontier'), reward:{coin:25000, evoStone:25} },
+  { id:'mq1', name:'🏛️ 해양 연구소 설립', desc:'물고기를 3마리로 늘리세요.', hint:'상점(🛒)에서 물고기를 구매하거나 탐사로 발견할 수 있어요.', check:s=>s.fish.length>=3, prog:s=>[s.fish.length,3], reward:{coin:120, feed:5} },
+  { id:'mq2', name:'🍤 첫 먹이 주기', desc:'먹이를 10번 주세요.', hint:'수족관 화면을 탭하면 그 자리에 먹이가 떨어져요. 물고기가 헤엄쳐 와서 먹습니다.', check:s=>s.stats.totalFeed>=10, prog:s=>[Math.min(s.stats.totalFeed,10),10], reward:{coin:150, feed:5} },
+  { id:'mq3', name:'✨ 첫 진화', desc:'물고기를 1마리 진화시키세요.', hint:'먹이를 주면 진화 게이지가 차고, 가득 차면 진화합니다.', check:s=>s.stats.totalEvolves>=1, prog:s=>[Math.min(s.stats.totalEvolves,1),1], reward:{coin:200, evoStone:3} },
+  { id:'mq4', name:'🪸 산호 해역 진출', desc:'산호 해역을 해금하세요.', hint:'탐사(🚀) 메뉴에서 새 지역을 해금할 수 있어요.', check:s=>s.unlockedRegions.includes('coral_reef'), prog:s=>[s.unlockedRegions.includes('coral_reef')?1:0,1], reward:{coin:200} },
+  { id:'mq5', name:'🚀 첫 탐사', desc:'탐사를 1회 완료하세요.', hint:'탐사를 보내면 유전자 샘플과 알, 새 물고기를 얻어요.', check:s=>s.stats.totalExplore>=1, prog:s=>[Math.min(s.stats.totalExplore,1),1], reward:{coin:250, gene:5} },
+  { id:'mq6', name:'🥚 알을 품다', desc:'알을 1개 부화시키세요.', hint:'탐사로 얻은 알은 알 보관함(🥚)에서 부화시킬 수 있어요.', check:s=>s.stats.totalHatched>=1, prog:s=>[Math.min(s.stats.totalHatched,1),1], reward:{coin:300, gene:5} },
+  { id:'mq7', name:'🧪 유전자 연구 시작', desc:'유전자 조합을 1회 실행하세요.', hint:'연구소(🧪)에서 물고기 2마리를 조합해 새 종을 만들 수 있어요.', check:s=>s.stats.totalGeneCombine>=1, prog:s=>[Math.min(s.stats.totalGeneCombine,1),1], reward:{coin:350, evoStone:3} },
+  { id:'mq8', name:'🤖 자동화의 시작', desc:'자동화 장비를 1개 설치하세요.', hint:'상점 → 자동화 장비 탭에서 구매하면 게임이 자동으로 진행돼요.', check:s=>Object.values(s.automations).some(v=>v), prog:s=>[Object.values(s.automations).some(v=>v)?1:0,1], reward:{coin:450} },
+  { id:'mq9', name:'🌑 심해 진출', desc:'심해 지역을 해금하세요.', hint:'탐사 메뉴에서 더 깊은 지역으로 진출하세요.', check:s=>s.unlockedRegions.includes('deep_sea'), prog:s=>[s.unlockedRegions.includes('deep_sea')?1:0,1], reward:{coin:600} },
+  { id:'mq10', name:'📖 도감 수집가', desc:'도감에 15종을 등록하세요.', hint:'새로운 종을 발견할 때마다 도감(📖)에 등록돼요.', check:s=>Object.keys(s.dex).length>=15, prog:s=>[Math.min(Object.keys(s.dex).length,15),15], reward:{coin:700, evoStone:4} },
+  { id:'mq11', name:'🌙 우주 진출', desc:'달 바다 지역을 해금하세요.', check:s=>s.unlockedRegions.includes('moon_sea'), prog:s=>[s.unlockedRegions.includes('moon_sea')?1:0,1], reward:{coin:1200} },
+  { id:'mq12', name:'🔬 분해 연구', desc:'물고기를 1회 분해하세요.', hint:'연구소의 분해 탭에서 물고기를 유전자로 환원할 수 있어요.', check:s=>s.stats.totalDismantle>=1, prog:s=>[Math.min(s.stats.totalDismantle,1),1], reward:{coin:700, gene:8} },
+  { id:'mq13', name:'🧬 돌연변이 연구', desc:'돌연변이 연구를 1회 수행하세요.', check:s=>s.stats.totalMutation>=1, prog:s=>[Math.min(s.stats.totalMutation,1),1], reward:{coin:900, evoStone:5} },
+  { id:'mq14', name:'🐣 신종 창조', desc:'신종 창조를 1회 수행하세요.', check:s=>s.stats.totalNewborn>=1, prog:s=>[Math.min(s.stats.totalNewborn,1),1], reward:{coin:1300, gene:10} },
+  { id:'mq15', name:'🪐 행성 개척', desc:'행성을 1회 개척하세요.', hint:'개척(🪐) 메뉴에서 행성에 투자하면 영구 보너스를 얻어요.', check:s=>Object.values(s.planets||{}).some(v=>v>=1), prog:s=>[Object.values(s.planets||{}).some(v=>v>=1)?1:0,1], reward:{coin:1600} },
+  { id:'mq16', name:'🔴 화성 정복', desc:'화성 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('mars_sea'), prog:s=>[s.unlockedRegions.includes('mars_sea')?1:0,1], reward:{coin:2200} },
+  { id:'mq17', name:'👑 전설의 수집가', desc:'전설 등급 이상 물고기 3마리를 보유하세요.', check:s=>s.fish.filter(f=>gradeIndex(SPECIES[f.species].grade)>=4).length>=3, prog:s=>[Math.min(s.fish.filter(f=>gradeIndex(SPECIES[f.species].grade)>=4).length,3),3], reward:{coin:2800, evoStone:8} },
+  { id:'mq18', name:'🌀 목성의 폭풍', desc:'목성 폭풍 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('jupiter_sea'), prog:s=>[s.unlockedRegions.includes('jupiter_sea')?1:0,1], reward:{coin:3800} },
+  { id:'mq19', name:'🪐 토성의 고리', desc:'토성 고리 해역을 해금하세요.', check:s=>s.unlockedRegions.includes('saturn_sea'), prog:s=>[s.unlockedRegions.includes('saturn_sea')?1:0,1], reward:{coin:5500} },
+  { id:'mq20', name:'⚫ 심연의 문턱', desc:'블랙홀 심연 지역을 해금하세요.', check:s=>s.unlockedRegions.includes('blackhole'), prog:s=>[s.unlockedRegions.includes('blackhole')?1:0,1], reward:{coin:9000, evoStone:15} },
+  { id:'mq21', name:'🌟 신급 탄생', desc:'신급 등급 물고기를 보유하세요.', check:s=>s.fish.some(f=>SPECIES[f.species] && SPECIES[f.species].grade==='god'), prog:s=>[s.fish.some(f=>SPECIES[f.species]&&SPECIES[f.species].grade==='god')?1:0,1], reward:{coin:16000} },
+  { id:'mq22', name:'🛸 무한의 문', desc:'심우주 개척지를 해금하세요.', check:s=>s.unlockedRegions.includes('deep_space_frontier'), prog:s=>[s.unlockedRegions.includes('deep_space_frontier')?1:0,1], reward:{coin:26000, evoStone:25} },
 ];
+
+/* ---------- 게임 가이드 (도움말 내용) ---------- */
+const GUIDE_SECTIONS = [
+  { icon:'🍤', title:'먹이 시스템', body:'수족관 화면을 탭하면 그 위치에 먹이가 떨어집니다. 물고기는 가장 가까운 먹이를 향해 헤엄쳐 가서 먹습니다. 먹이를 먹으면 경험치·행복도·진화 게이지·친밀도가 오릅니다. "모두에게 먹이주기" 버튼은 화면 전체에 먹이를 뿌립니다.' },
+  { icon:'🚀', title:'탐사 시스템', body:'탐사를 보내면 일정 시간 후 유전자 샘플, 알, 진화석, 새 물고기를 얻습니다. 더 깊은 지역일수록 보상이 큽니다. 코인을 모아 새 지역을 해금하세요.' },
+  { icon:'🤖', title:'자동화 시스템', body:'상점의 자동화 장비를 구매하면 게임을 자동으로 진행할 수 있습니다. 자동 먹이·수익 증폭·자동 부화·자동 탐사 드론이 있으며, 좌측 패널에서 각각 ON/OFF 할 수 있습니다.' },
+  { icon:'🧪', title:'유전자 연구소', body:'물고기 2마리를 조합해 새로운 종을 만들거나(조합), 물고기를 분해해 유전자를 얻고(분해), 돌연변이를 연구하거나, 완전히 새로운 신종을 창조할 수 있습니다.' },
+  { icon:'✨', title:'진화', body:'먹이를 주면 진화 게이지가 차고, 일정 단계(성어 이상)와 게이지 조건을 만족하면 더 강한 종으로 진화합니다. 진화하면 등급과 수익이 크게 오릅니다.' },
+  { icon:'🥚', title:'알 부화', body:'탐사로 얻은 알은 알 보관함에서 시간이 지나면 부화합니다. 진화석으로 즉시 부화시킬 수도 있습니다. 알 등급이 높을수록 희귀한 물고기가 나옵니다.' },
+  { icon:'🪸', title:'장식품', body:'꾸미기 메뉴에서 장식을 설치하면 수족관이 화려해지고 수익·행복·성장·희귀종 확률 보너스를 얻습니다. 설치한 장식은 드래그해서 위치를 옮길 수 있습니다.' },
+  { icon:'💞', title:'번식과 친밀도', body:'암수 한 쌍으로 알을 낳아 부모 능력치를 계승할 수 있습니다. 먹이를 줄수록 친밀도가 오르고, 100이 되면 물고기가 커서를 따라다니며 큰 수익 버프를 줍니다.' },
+  { icon:'🌈', title:'희귀 개체', body:'아주 낮은 확률로 황금·무지개·우주 변종이 등장합니다. 일반 개체보다 수익이 2~6배 높고 특별한 발광 효과를 가집니다.' },
+  { icon:'🪙', title:'수익 구조', body:'모든 물고기는 등급·레벨·성격·개체값·친밀도·변종에 따라 매초 코인을 생산합니다. 좋은 물고기를 모으고 진화시키고 친밀도를 높이는 것이 핵심 성장 전략입니다.' },
+];
+
 
 /* ---------- 일일 퀘스트 풀 ---------- */
 const QUEST_POOL = [
@@ -1552,15 +1649,20 @@ class GameState {
     this.dex = { goldfish: true };
     this.unlockedRegions = ['beginner_sea'];
     this.currentRegion = 'beginner_sea';
-    this.automations = {};
+    this.automations = {};         // 소유 여부
+    this.automationsEnabled = {};   // ON/OFF 상태 (소유 시 기본 ON)
     this.quests = [];
     this.questsDate = null;
     this.achievementsDone = {};
     this.eggs = [];
     this.planets = {};
-    this.decorations = {};   // 수족관 꾸미기 (시스템 8): {decoId: count}
-    this.breeding = [];      // 진행 중 번식 (시스템 5): {uid, parentA, parentB, hatchAt, species}
-    this.food = [];          // 화면 내 먹이 오브젝트 (시스템 1, 저장 안 함)
+    this.decorations = {};   // 수족관 꾸미기: {decoId: count}
+    this.decorPositions = {}; // 장식품 배치 위치: {instanceId: {decoId, x, y}}
+    this.breeding = [];
+    this.food = [];
+    this.tutorialIndex = 0;  // 튜토리얼(메인 스토리) 진행 단계
+    this.tutorialClaimed = {}; // 보상 수령 여부
+    this.seenGuide = false;  // 초보자 가이드 최초 표시 여부
     this.stats = {
       totalFeed:0, totalGrow:0, totalExplore:0, totalSell:0, totalEvolves:0,
       totalHatched:0, totalDismantle:0, totalMutation:0, totalNewborn:0, totalGeneCombine:0,
@@ -1591,13 +1693,18 @@ function serializeState(state){
     unlockedRegions:state.unlockedRegions,
     currentRegion:state.currentRegion,
     automations:state.automations,
+    automationsEnabled:state.automationsEnabled,
     quests:state.quests,
     questsDate:state.questsDate,
     achievementsDone:state.achievementsDone,
     eggs: state.eggs.map(e=>({ uid:e.uid, eggType:e.eggType, regionId:e.regionId, startedAt:e.startedAt, hatchAt:e.hatchAt })),
     planets: state.planets,
     decorations: state.decorations,
+    decorPositions: state.decorPositions,
     breeding: state.breeding,
+    tutorialIndex: state.tutorialIndex,
+    tutorialClaimed: state.tutorialClaimed,
+    seenGuide: state.seenGuide,
     stats:state.stats,
     exploring:state.exploring,
     createdAt:state.createdAt,
@@ -1627,13 +1734,24 @@ function deserializeState(json){
   state.unlockedRegions = d.unlockedRegions || ['beginner_sea'];
   state.currentRegion = d.currentRegion || 'beginner_sea';
   state.automations = d.automations || {};
+  // 구버전 호환: enabled 정보가 없으면 소유한 자동화는 모두 ON으로 간주
+  state.automationsEnabled = d.automationsEnabled || {};
+  for(const id of Object.keys(state.automations)){
+    if(state.automations[id] && state.automationsEnabled[id] === undefined){
+      state.automationsEnabled[id] = true;
+    }
+  }
   state.quests = d.quests || [];
   state.questsDate = d.questsDate || null;
   state.achievementsDone = d.achievementsDone || {};
   state.eggs = (d.eggs||[]).map(e=>new EggInstance(e.eggType, e));
   state.planets = d.planets || {};
   state.decorations = d.decorations || {};
+  state.decorPositions = d.decorPositions || {};
   state.breeding = d.breeding || [];
+  state.tutorialIndex = d.tutorialIndex || 0;
+  state.tutorialClaimed = d.tutorialClaimed || {};
+  state.seenGuide = d.seenGuide || false;
   state.stats = Object.assign({
     totalFeed:0, totalGrow:0, totalExplore:0, totalSell:0, totalEvolves:0,
     totalHatched:0, totalDismantle:0, totalMutation:0, totalNewborn:0, totalGeneCombine:0,
@@ -1704,7 +1822,7 @@ function computeTotalIncomePerSecond(state){
   if(state.fish.some(f=>f.species==='orca')) total *= 1.12;
   if(state.fish.some(f=>f.species==='thunder_shark')) total *= 1.15;
   if(state.fish.some(f=>f.species==='megalodon')) total *= 1.18;
-  if(state.automations.auto_collector) total *= 1.3;
+  if(state.automations.auto_collector && state.automationsEnabled.auto_collector) total *= 1.3;
   total *= (1 + getPlanetBonus(state, 'income'));
   total *= (1 + getDecorationBonus(state, 'income'));
   return total;
@@ -2121,6 +2239,7 @@ function initGame(){
     applyOfflineProgress();
   } else {
     STATE = new GameState();
+    STATE._firstRun = true;
   }
   ensureDailyQuests();
   renderAll();
@@ -2139,6 +2258,11 @@ function initGame(){
       }
     }
   } catch(e){ console.warn('3D init failed, using 2D', e); }
+  // 첫 플레이 시 가이드 자동 표시
+  if(STATE._firstRun){
+    setTimeout(()=>{ openModal('guide'); }, 600);
+    STATE._firstRun = false;
+  }
 }
 
 function applyOfflineProgress(){
@@ -2224,6 +2348,8 @@ function gameTick(deltaSec){
   updateHeaderStats();
   checkAchievements();
   checkMainQuestProgress();
+  renderMainQuestBanner();
+  maybeSpawnRandomEvent(deltaSec);
   renderTankIncomeBadge();
 }
 
@@ -2232,9 +2358,10 @@ function handleAutomations(deltaSec){
   const now = Date.now();
   for(const autoId of Object.keys(STATE.automations)){
     if(!STATE.automations[autoId]) continue;
+    if(!STATE.automationsEnabled[autoId]) continue; // OFF면 작동 안 함
     const def = AUTOMATIONS.find(a=>a.id===autoId);
     if(!def) continue;
-    if(autoId === 'auto_collector' || autoId === 'auto_hatchery') continue; // 패시브 보너스로 처리됨 (income/hatchTime)
+    if(autoId === 'auto_collector' || autoId === 'auto_hatchery') continue; // 패시브 보너스로 처리됨
     if(!STATE.lastAutoTick[autoId]) STATE.lastAutoTick[autoId] = now;
     const elapsed = (now - STATE.lastAutoTick[autoId])/1000;
     if(elapsed >= def.interval){
@@ -2253,11 +2380,120 @@ function runAutomation(autoId){
       if(!STATE.exploring){
         const region = STATE.unlockedRegions[Math.floor(Math.random()*STATE.unlockedRegions.length)];
         startExploration(region, true);
+        const r = REGIONS.find(x=>x.id===region);
+        addExploreLog(`🤖 자동 드론이 ${r?r.name:'미지의 해역'} 탐사를 시작했습니다.`);
       }
       break;
     }
   }
   renderAll();
+}
+
+/* 탐사 로그 (자동 탐사 동작 확인용) */
+function addExploreLog(msg){
+  if(!STATE._exploreLog) STATE._exploreLog = [];
+  STATE._exploreLog.unshift({ t: Date.now(), msg });
+  STATE._exploreLog = STATE._exploreLog.slice(0, 12);
+  const box = document.getElementById('exploreLogList');
+  if(box){
+    box.innerHTML = STATE._exploreLog.map(l=>`<div class="log-row">${l.msg}</div>`).join('');
+  }
+}
+
+/* ---------- 랜덤 이벤트 시스템 (재미 요소, 시스템 7) ----------
+   주기적으로 수족관에 클릭 가능한 오브젝트가 등장한다.
+   - 반짝이는 조개: 클릭 시 코인
+   - 보물상자: 클릭 시 진화석/유전자
+   - 희귀 물고기: 제한 시간 내 클릭 시 희귀 개체 포획
+*/
+let randomEventTimer = 0;
+let activeEventEl = null;
+function maybeSpawnRandomEvent(deltaSec){
+  if(activeEventEl) return;                 // 이미 이벤트 진행 중
+  randomEventTimer += deltaSec;
+  if(randomEventTimer < 22) return;         // 약 22초마다 시도
+  randomEventTimer = 0;
+  if(Math.random() < 0.45) return;          // 절반 정도만 실제 발생
+  const roll = Math.random();
+  if(roll < 0.5) spawnEventObject('clam');
+  else if(roll < 0.82) spawnEventObject('treasure');
+  else spawnEventObject('rarefish');
+}
+
+function spawnEventObject(kind){
+  const layer = document.getElementById('fxLayer');
+  if(!layer) return;
+  const el = document.createElement('div');
+  el.className = 'event-object event-'+kind;
+  const conf = {
+    clam:     { emoji:'🐚', label:'반짝이는 조개!', life:9000 },
+    treasure: { emoji:'🎁', label:'보물상자 발견!', life:9000 },
+    rarefish: { emoji:'🐠', label:'희귀 물고기 출현! 빨리 탭하세요!', life:5000 },
+  }[kind];
+  el.textContent = conf.emoji;
+  el.style.left = (15 + Math.random()*60) + '%';
+  el.style.top = (20 + Math.random()*45) + '%';
+  el.title = conf.label;
+  layer.appendChild(el);
+  activeEventEl = el;
+  queueToast('✨ ' + conf.label, 'discover');
+  // 등장 알림 배지
+  const hintBadge = document.getElementById('eventHint');
+  if(hintBadge){ hintBadge.textContent = conf.emoji + ' ' + conf.label; hintBadge.style.display='block'; }
+
+  const cleanup = ()=>{
+    if(el.parentNode) el.remove();
+    if(activeEventEl===el) activeEventEl=null;
+    if(hintBadge) hintBadge.style.display='none';
+  };
+  const timeout = setTimeout(cleanup, conf.life);
+  el.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    clearTimeout(timeout);
+    resolveEvent(kind, el);
+    cleanup();
+  });
+}
+
+function resolveEvent(kind, el){
+  if(kind==='clam'){
+    const reward = Math.round((20 + Math.random()*60) * (1 + (STATE.stats.totalExplore||0)*0.05));
+    STATE.coin += reward;
+    queueToast(`🐚 조개에서 코인 +${reward}!`, 'discover');
+    spawnFloatingTextAt(el, `+🪙${reward}`, 'var(--accent-gold)');
+  } else if(kind==='treasure'){
+    const r = Math.random();
+    if(r < 0.5){ const g = 5+Math.floor(Math.random()*10); STATE.gene += g; queueToast(`🎁 보물상자에서 유전자 샘플 +${g}!`, 'discover'); spawnFloatingTextAt(el, `+🧬${g}`, 'var(--accent-cyan)'); }
+    else if(r < 0.85){ const s = 2+Math.floor(Math.random()*4); STATE.evoStone += s; queueToast(`🎁 보물상자에서 진화석 +${s}!`, 'discover'); spawnFloatingTextAt(el, `+💎${s}`, '#a87bff'); }
+    else { const c = 200+Math.floor(Math.random()*400); STATE.coin += c; queueToast(`🎁 보물상자에서 코인 +${c}!`, 'discover'); spawnFloatingTextAt(el, `+🪙${c}`, 'var(--accent-gold)'); }
+  } else if(kind==='rarefish'){
+    // 제한 시간 내 클릭 성공 → 희귀 개체 포획
+    if(STATE.fish.length < STATE.capacity){
+      const pool = (REGIONS.find(r=>r.id===STATE.currentRegion)?.species || ['goldfish']).filter(id=>SPECIES[id]);
+      const sp = pool.length ? pool[Math.floor(Math.random()*pool.length)] : 'goldfish';
+      // 보장된 변종 부여
+      const variant = Math.random()<0.5 ? 'golden' : 'rainbow';
+      const f = addFish(sp, { variant });
+      queueToast(`🎣 희귀 물고기 포획 성공!`, 'evo');
+    } else {
+      const c = 300; STATE.coin += c;
+      queueToast(`수족관이 가득 차서 코인 +${c}로 대체 지급!`, 'discover');
+    }
+  }
+  renderAll();
+}
+
+function spawnFloatingTextAt(refEl, text, color){
+  const layer = document.getElementById('fxLayer');
+  if(!layer || !refEl) return;
+  const ft = document.createElement('div');
+  ft.className = 'floating-text';
+  ft.textContent = text;
+  ft.style.color = color || '#fff';
+  ft.style.left = refEl.style.left;
+  ft.style.top = refEl.style.top;
+  layer.appendChild(ft);
+  setTimeout(()=>ft.remove(), 1400);
 }
 
 /* ---------- 알 부화 체크 ---------- */
@@ -2271,7 +2507,7 @@ function checkEggHatching(){
 }
 
 function eggHatchSpeedMult(){
-  return STATE.automations.auto_hatchery ? 0.6 : 1.0;
+  return (STATE.automations.auto_hatchery && STATE.automationsEnabled.auto_hatchery) ? 0.6 : 1.0;
 }
 
 function hatchEgg(uid, manual){
@@ -2786,7 +3022,7 @@ function startExploration(regionId, isAuto=false){
   timeMult *= (1 - getPlanetBonus(STATE, 'exploreSpeed'));
   timeMult = Math.max(0.35, timeMult);
   const actualTime = Math.round(region.exploreTime * timeMult);
-  STATE.exploring = { regionId, startedAt:Date.now(), endsAt: Date.now() + actualTime*1000 };
+  STATE.exploring = { regionId, startedAt:Date.now(), endsAt: Date.now() + actualTime*1000, isAuto };
   if(!isAuto) queueToast(`${region.name} 탐사를 시작합니다. (${actualTime}초)`, '');
   renderAll();
 }
@@ -2838,6 +3074,7 @@ function finishExploration(offline){
     resultMsg += `, 진화석 +${stoneGain}`;
   }
   if(!offline) queueToast(resultMsg, 'discover');
+  addExploreLog((exp.isAuto?'🤖 ':'🚀 ') + resultMsg);
   renderAll();
 }
 
@@ -3031,7 +3268,25 @@ function renderMainQuestBanner(){
     if(k==='feed') return `🍤${v}`;
     return '';
   }).join(' ');
-  el.innerHTML = `<span class="mq-ic">🎯</span><div class="mq-text"><div class="mq-title">${mq.name}</div><div class="mq-desc">${mq.desc} · 보상 ${rewardStr}</div></div>`;
+  const [cur, target] = mq.prog ? mq.prog(STATE) : [0,1];
+  const pct = Math.min(100, Math.round(cur/target*100));
+  const done = cur>=target;
+  const hint = mq.hint ? `<div class="mq-hint">💡 ${mq.hint}</div>` : '';
+  el.innerHTML = `
+    <span class="mq-ic">🎯</span>
+    <div class="mq-text">
+      <div class="mq-toprow">
+        <div class="mq-title">현재 목표 · ${mq.name}</div>
+        <div class="mq-stepcount">${STATE.mainQuestIndex+1}/${MAIN_QUEST_LINE.length}</div>
+      </div>
+      <div class="mq-desc">${mq.desc}</div>
+      <div class="mq-progrow">
+        <div class="mq-progbar"><div class="mq-progfill" style="width:${pct}%;"></div></div>
+        <span class="mq-progtext">${cur} / ${target}</span>
+      </div>
+      <div class="mq-rewardrow">보상 ${rewardStr} ${done?'<span class="mq-ready">✓ 곧 지급</span>':''}</div>
+      ${hint}
+    </div>`;
 }
 
 /* ---------- 업적 체크 ---------- */
@@ -3232,11 +3487,17 @@ function renderLeftPanel(){
   });
 
   const autoList = document.getElementById('autoStatusList');
-  const activeAutos = AUTOMATIONS.filter(a=>STATE.automations[a.id]);
-  if(activeAutos.length===0){
-    autoList.innerHTML = '아직 해금된 자동화가 없습니다.';
+  const ownedAutos = AUTOMATIONS.filter(a=>STATE.automations[a.id]);
+  if(ownedAutos.length===0){
+    autoList.innerHTML = '<span style="color:var(--text-low);">상점 → 자동화 장비에서<br>해금할 수 있습니다.</span>';
   } else {
-    autoList.innerHTML = activeAutos.map(a=>`<div class="stat-row"><span>${a.name}</span><span class="v">ON</span></div>`).join('');
+    autoList.innerHTML = ownedAutos.map(a=>{
+      const on = !!STATE.automationsEnabled[a.id];
+      return `<div class="auto-row">
+        <span class="auto-name">${a.name}</span>
+        <button class="auto-toggle ${on?'on':'off'}" onclick="toggleAutomation('${a.id}')">${on?'ON':'OFF'}</button>
+      </div>`;
+    }).join('');
   }
 
   // 알 보관함 상태
@@ -3417,6 +3678,8 @@ function openModal(name){
   if(name==='planet') renderPlanetModal();
   if(name==='breed') renderBreedModal();
   if(name==='decor') renderDecorModal();
+  if(name==='guide') renderGuideModal();
+  if(name==='goals') renderGoalsModal();
 }
 function closeModal(name){
   document.getElementById('modal-'+name).classList.remove('open');
@@ -3425,6 +3688,7 @@ function closeModal(name){
 /* ---------- 상점 모달 ---------- */
 function renderShopModal(){
   const content = document.getElementById('shopContent');
+  if(!content) return;
   if(activeShopTab==='fish'){
     content.innerHTML = '<div class="grid-cards">' + SHOP_FISH.map(item=>{
       const sp = SPECIES[item.species];
@@ -3513,9 +3777,20 @@ function buyAutomation(autoId, price){
   if(STATE.coin < price){ queueToast('코인이 부족합니다.', 'warn'); return; }
   STATE.coin -= price;
   STATE.automations[autoId] = true;
+  STATE.automationsEnabled[autoId] = true;
   STATE.lastAutoTick[autoId] = Date.now();
   queueToast(`${AUTOMATIONS.find(a=>a.id===autoId).name}이 설치되었습니다!`, 'discover');
   renderAll(); renderShopModal();
+}
+
+function toggleAutomation(autoId){
+  if(!STATE.automations[autoId]) return;
+  STATE.automationsEnabled[autoId] = !STATE.automationsEnabled[autoId];
+  if(STATE.automationsEnabled[autoId]) STATE.lastAutoTick[autoId] = Date.now();
+  const def = AUTOMATIONS.find(a=>a.id===autoId);
+  queueToast(`${def.name} ${STATE.automationsEnabled[autoId]?'ON':'OFF'}`, '');
+  renderLeftPanel();
+  renderShopModal();
 }
 
 document.addEventListener('click', (e)=>{
@@ -3768,7 +4043,8 @@ function renderDecorModal(){
   const content = document.getElementById('decorContent');
   if(!content) return;
   const bonusLabel = { income:'전체 수익', happy:'행복도 회복', growth:'성장 속도', rareRate:'희귀종 확률' };
-  content.innerHTML = `<p style="font-size:12px;color:var(--text-mid);margin-bottom:12px;">장식품을 설치하면 수족관이 화려해지고 영구 보너스를 얻습니다. 같은 장식을 여러 개 설치하면 효과가 누적됩니다.</p>
+  content.innerHTML = `<p style="font-size:12px;color:var(--text-mid);margin-bottom:10px;">장식품을 설치하면 수족관이 화려해지고 영구 보너스를 얻습니다. 같은 장식을 여러 개 설치하면 효과가 누적됩니다.</p>
+  <button class="btn full" id="decorEditBtn" style="margin-bottom:12px;" onclick="toggleDecorEditMode()">${decorEditMode?'✅ 배치 완료':'🛠️ 배치 모드 (드래그로 위치 변경)'}</button>
   <div class="grid-cards">` + DECORATIONS.map(d=>{
     const cnt = (STATE.decorations && STATE.decorations[d.id]) || 0;
     return `<div class="shop-item">
@@ -3787,12 +4063,32 @@ function buyDecoration(id){
   if(STATE.coin < d.price){ queueToast('코인이 부족합니다.', 'warn'); return; }
   STATE.coin -= d.price;
   STATE.decorations[id] = (STATE.decorations[id]||0)+1;
-  queueToast(`${d.emoji} ${d.name}을(를) 설치했습니다!`, 'discover');
+  // 새 인스턴스를 바닥의 빈 위치에 배치
+  const instId = 'deco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const isBackground = (id==='space_station' || id==='blackhole_decor' || id==='shipwreck');
+  STATE.decorPositions[instId] = {
+    decoId: id,
+    x: 10 + Math.random()*78,
+    y: isBackground ? (15 + Math.random()*30) : (84 + Math.random()*10),
+  };
+  queueToast(`${d.emoji} ${d.name}을(를) 설치했습니다! 길게 눌러 위치를 옮길 수 있어요.`, 'discover');
   renderDecorBackdrop();
   renderAll();
   renderDecorModal();
+  bumpQuestProgress('decorCount', 1);
 }
-/* 설치한 장식품을 수족관 바닥에 표시 */
+
+let decorEditMode = false;
+function toggleDecorEditMode(){
+  decorEditMode = !decorEditMode;
+  document.body.classList.toggle('decor-edit', decorEditMode);
+  queueToast(decorEditMode ? '🛠️ 배치 모드: 장식을 드래그해 옮기세요.' : '배치 모드를 종료했습니다.', '');
+  renderDecorBackdrop();
+  const btn = document.getElementById('decorEditBtn');
+  if(btn) btn.textContent = decorEditMode ? '✅ 배치 완료' : '🛠️ 배치 모드';
+}
+
+/* 설치한 장식품을 수족관에 표시 (저장된 위치 사용 + 드래그 이동) */
 function renderDecorBackdrop(){
   const area = document.getElementById('tankCanvasArea');
   if(!area) return;
@@ -3800,24 +4096,124 @@ function renderDecorBackdrop(){
   if(!layer){
     layer = document.createElement('div');
     layer.id = 'decorLayer';
-    area.insertBefore(layer, document.getElementById('fishLayer'));
+    area.appendChild(layer);
   }
   layer.innerHTML = '';
-  let slot = 0;
-  const totalSlots = Object.values(STATE.decorations||{}).reduce((a,b)=>a+b,0);
-  for(const id of Object.keys(STATE.decorations||{})){
-    const d = decorationInfo(id);
-    const cnt = STATE.decorations[id];
-    for(let i=0;i<cnt;i++){
-      const el = document.createElement('div');
-      el.className = 'decor-item';
-      el.textContent = d.emoji;
-      const span = Math.max(1, totalSlots);
-      el.style.left = (6 + (slot/(span))*86 + Math.random()*4) + '%';
-      layer.appendChild(el);
-      slot++;
+  // 구버전 호환: decorPositions가 비어있는데 decorations가 있으면 자동 배치
+  const totalInst = Object.keys(STATE.decorPositions||{}).length;
+  const totalCount = Object.values(STATE.decorations||{}).reduce((a,b)=>a+b,0);
+  if(totalInst < totalCount){
+    let made = totalInst;
+    for(const id of Object.keys(STATE.decorations||{})){
+      // 이 종류의 이미 배치된 수
+      let placed = Object.values(STATE.decorPositions).filter(p=>p.decoId===id).length;
+      while(placed < STATE.decorations[id]){
+        const instId='deco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)+made;
+        STATE.decorPositions[instId]={decoId:id, x:8+Math.random()*80, y:84+Math.random()*10};
+        placed++; made++;
+      }
     }
   }
+  for(const instId of Object.keys(STATE.decorPositions||{})){
+    const p = STATE.decorPositions[instId];
+    const d = decorationInfo(p.decoId);
+    if(!d) continue;
+    const el = document.createElement('div');
+    el.className = 'decor-item' + (decorEditMode?' editable':'');
+    el.textContent = d.emoji;
+    el.style.left = p.x + '%';
+    el.style.top = p.y + '%';
+    el.dataset.inst = instId;
+    if(decorEditMode) attachDecorDrag(el, instId, area);
+    layer.appendChild(el);
+  }
+}
+
+function attachDecorDrag(el, instId, area){
+  const start = (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const move = (ev)=>{
+      const pt = ev.touches ? ev.touches[0] : ev;
+      const rect = area.getBoundingClientRect();
+      let x = ((pt.clientX-rect.left)/rect.width)*100;
+      let y = ((pt.clientY-rect.top)/rect.height)*100;
+      x = Math.max(2, Math.min(96, x)); y = Math.max(8, Math.min(96, y));
+      STATE.decorPositions[instId].x = x;
+      STATE.decorPositions[instId].y = y;
+      el.style.left = x+'%'; el.style.top = y+'%';
+    };
+    const end = ()=>{
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('touchend', end);
+      saveGame(STATE);
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', end);
+    document.addEventListener('touchmove', move, {passive:false});
+    document.addEventListener('touchend', end);
+  };
+  el.addEventListener('mousedown', start);
+  el.addEventListener('touchstart', start, {passive:false});
+}
+
+/* ---------- 게임 가이드 / 도움말 모달 (시스템 6) ---------- */
+function renderGuideModal(){
+  const content = document.getElementById('guideContent');
+  if(!content) return;
+  content.innerHTML = `
+    <div class="guide-intro">🌊 처음이신가요? 아래 순서대로 따라하면 됩니다!</div>
+    <ol class="guide-steps">
+      <li>수족관 화면을 <b>탭</b>해서 먹이를 주세요. 물고기가 헤엄쳐 와서 먹습니다.</li>
+      <li>먹이를 주면 물고기가 <b>성장·진화</b>하고 매초 <b>코인</b>을 법니다.</li>
+      <li>화면 위쪽의 <b>🎯 현재 목표</b>를 따라가면 게임이 자연스럽게 풀립니다.</li>
+      <li>코인이 모이면 <b>🚀 탐사</b>로 새 지역·알·물고기를 얻으세요.</li>
+      <li><b>🤖 자동화</b> 장비를 사면 게임이 알아서 진행됩니다.</li>
+    </ol>
+    <div class="section-label" style="margin-top:14px;">시스템 설명</div>
+    ${GUIDE_SECTIONS.map(g=>`
+      <div class="guide-card">
+        <div class="guide-card-head"><span class="guide-ic">${g.icon}</span><b>${g.title}</b></div>
+        <div class="guide-card-body">${g.body}</div>
+      </div>`).join('')}
+  `;
+}
+
+/* ---------- 장기 목표 모달 (시스템 8) ---------- */
+function renderGoalsModal(){
+  const content = document.getElementById('goalsContent');
+  if(!content) return;
+  const totalSpecies = Object.keys(SPECIES).length;
+  const dexCount = Object.keys(STATE.dex).length;
+  const legendCount = STATE.fish.filter(f=>SPECIES[f.species] && gradeIndex(SPECIES[f.species].grade)>=4).length;
+  const planetLevels = Object.values(STATE.planets||{}).reduce((a,b)=>a+b,0);
+  const hasWhale = STATE.fish.some(f=>['orca','sperm_whale','nebula_whale'].includes(f.species));
+  const hasBlackhole = STATE.unlockedRegions.includes('blackhole');
+  const allRegions = REGIONS.length;
+  const unlockedRegions = STATE.unlockedRegions.length;
+  const goal = (icon, title, cur, target, suffix='')=>{
+    const pct = Math.min(100, Math.round(cur/target*100));
+    const done = cur>=target;
+    return `<div class="goal-item ${done?'done':''}">
+      <div class="goal-head"><span>${icon} ${title}</span><span class="goal-num">${cur}/${target}${suffix} ${done?'✓':''}</span></div>
+      <div class="goal-bar"><div class="goal-fill" style="width:${pct}%;"></div></div>
+    </div>`;
+  };
+  content.innerHTML = `
+    <p style="font-size:12px;color:var(--text-mid);margin-bottom:14px;">장기적으로 도전할 큰 목표들입니다. 천천히 하나씩 달성해보세요!</p>
+    ${goal('📖','도감 완성', dexCount, totalSpecies, '종')}
+    ${goal('🗺️','전 지역 해금', unlockedRegions, allRegions)}
+    ${goal('👑','전설 물고기 수집', legendCount, 5, '마리')}
+    ${goal('🪐','행성 개척 레벨 합계', planetLevels, 25)}
+    ${goal('🐋','우주/대양 고래 획득', hasWhale?1:0, 1)}
+    ${goal('⚫','블랙홀 생명체 발견', hasBlackhole?1:0, 1)}
+    <div class="section-label" style="margin-top:16px;">메인 스토리 진행</div>
+    <div class="goal-item">
+      <div class="goal-head"><span>🎯 메인 퀘스트</span><span class="goal-num">${Math.min(STATE.mainQuestIndex, MAIN_QUEST_LINE.length)}/${MAIN_QUEST_LINE.length}</span></div>
+      <div class="goal-bar"><div class="goal-fill" style="width:${Math.round(Math.min(STATE.mainQuestIndex,MAIN_QUEST_LINE.length)/MAIN_QUEST_LINE.length*100)}%;"></div></div>
+    </div>
+  `;
 }
 
 /* ---------- 도감 모달 (진화 계통도 포함, 시스템 7) ---------- */
@@ -3941,6 +4337,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
   document.getElementById('btnShopShortcut').onclick = ()=>openModal('shop');
   document.getElementById('btnSettings').onclick = ()=>openModal('settings');
+  const gb = document.getElementById('btnGuide');
+  if(gb) gb.onclick = ()=>openModal('guide');
 
   document.querySelectorAll('.nav-btn').forEach(btn=>{
     btn.onclick = ()=>openModal(btn.dataset.modal);
